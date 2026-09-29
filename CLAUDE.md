@@ -1,0 +1,40 @@
+# Parlons — project notes for Claude
+
+Speaking-first language-learning PWA. Local-first, offline, no backend. The owner is not a
+professional developer: explain decisions in plain language. SPEC.md is the brief — don't add
+features beyond it without asking; suggest them at the end of a phase.
+
+## Commands
+- `npm run dev` — dev server on http://localhost:5173
+- `npm test` — Vitest (unit + component tests)
+- `npm run build` — type-check + production build into `dist/` (includes service worker)
+- `npm run preview` — serve the production build locally (test offline/PWA here, not in dev)
+- `npm run icons` — regenerate icons + iOS splash screens from `scripts/make-icons.mjs`
+- `npm run seed-doc` — regenerate `docs/seed-review-fr.md` from the pack (do this after editing seed)
+
+## Architecture
+- `src/config.ts` — app name, programme length, review caps. Change the name here only.
+- `src/packs/` — **everything language-specific**. `types.ts` = Zod schema; `index.ts` = registry
+  + `loadPack()`; `fr/` = French (curriculum months 1–3, extras, AI templates in `fr/ai/*.md`).
+  UI code must never hard-code French: take text, locale, voices, colours, typography,
+  mistake categories and scenarios from the pack.
+- `src/db/schema.ts` — Dexie (IndexedDB). Every learning row has `lang`. **Migrations: never edit a
+  released `version(n)`; add `version(n+1)` with `.upgrade()`.** Add new tables to `TABLES` so backup covers them.
+- `src/lib/program.ts` — 90-day calendar. Week 1 is short (start Tue–Wed) or long (start Thu–Sun) so
+  weeks 2–12 run Mon–Sun and weekly reviews fall on Sundays. Leftover days = "final stretch".
+- `src/lib/backup.ts` — zip export/import (fflate): `backup.json` with `$date`/`$blob` markers + `audio/*`.
+- `src/app/` — providers, router (hash router for GitHub Pages), layout. `src/routes/` — screens.
+- Seed edits by the learner live in `seedOverrides` (the pack stays untouched); `lib/seed.ts` merges them.
+
+## Conventions
+- TypeScript strict, React function components, Tailwind v4 with colour tokens in `src/index.css`
+  (`bg-accent`, `text-muted`, `bg-surface`, …). No hard-coded colours in components.
+- Target-language text goes through `<TL>` (applies pack typography and `lang`).
+- Anything external (speech recognition, AI) must fail gracefully and never block a session.
+- No runtime CDNs, web fonts or analytics (must work in Russia without a VPN).
+- Tests that store Blobs in fake-indexeddb need `// @vitest-environment node` (jsdom Blobs don't clone).
+- Commit after each phase with a clear message.
+
+## Status
+- Phase 1 (foundation) done: PWA/install page, French pack, Dexie schema, seed review, backup, onboarding.
+- Next: Phase 2 — Today screen, guided session player, FSRS phrase bank (`ts-fsrs`).

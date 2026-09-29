@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+
+/* Dark mode follows the `dark` class on <html>, set from settings (system/light/dark). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Colour tokens. The accent comes from the active language pack and is set at runtime
+   on <html> as --pack-accent / --pack-accent-soft (see lib/theme.ts). */
+:root {
+  --bg: #faf8f5;
+  --surface: #ffffff;
+  --ink: #1a1d24;
+  --muted: #5b6170;
+  --line: #e4e0d9;
+  --accent: var(--pack-accent, #1f4fb8);
+  --accent-soft: var(--pack-accent-soft, #e8eefb);
+  --on-accent: #ffffff;
+  --rouge: #d7352a;
+  --again: #c2410c;
+  --hard: #9a6212;
+  --good: #2e7d4f;
+  --easy: var(--accent);
+  --warn-bg: #fdf3e1;
+  --warn-ink: #7a4a05;
+  --danger-bg: #fdeceb;
+  --danger-ink: #9b1c14;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #111418;
+  --surface: #1a1e24;
+  --ink: #eceef2;
+  --muted: #9aa1ae;
+  --line: #2a3039;
+  --accent: var(--pack-accent-dark, #7fa3ff);
+  --accent-soft: var(--pack-accent-soft-dark, #1b2a4d);
+  --on-accent: #0c1530;
+  --rouge: #ff6b5e;
+  --again: #fb923c;
+  --hard: #f6c35b;
+  --good: #5fd08e;
+  --warn-bg: #3a2c10;
+  --warn-ink: #f6d58e;
+  --danger-bg: #3d1614;
+  --danger-ink: #ffb4ad;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-rouge: var(--rouge);
+  --color-again: var(--again);
+  --color-hard: var(--hard);
+  --color-good: var(--good);
+  --color-easy: var(--easy);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-ink: var(--warn-ink);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-ink: var(--danger-ink);
+  /* System fonts only: nothing is fetched from the network. */
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+}
+
+/* Visible keyboard focus everywhere. */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Safe areas for notches and the home indicator in standalone mode. */
+.pt-safe { padding-top: max(env(safe-area-inset-top), 0.75rem); }
+.pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
+.px-safe {
+  padding-left: max(env(safe-area-inset-left), 1rem);
+  padding-right: max(env(safe-area-inset-right), 1rem);
+}
+
+/* Target-language text: slightly larger and never breaks before French punctuation. */
+.tl {
+  font-size: 1.125em;
+  line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

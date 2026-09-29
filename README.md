@@ -1,0 +1,101 @@
+# Parlons
+
+A speaking-first language app: a guided daily session gets you talking out loud, and your progress is shown honestly. It works offline, keeps all data on your device, and has no accounts. French is the first course.
+
+---
+
+## 1. Run it on your Mac
+
+You need Node.js (you have it: version 24).
+
+Open Terminal in the project folder and run:
+
+```bash
+npm install
+```
+
+(Only needed the first time, or after pulling new changes.)
+
+```bash
+npm run dev
+```
+
+Then open http://localhost:5173 in your browser. Press `Ctrl + C` in Terminal to stop it.
+
+To test the real offline, installable version locally:
+
+```bash
+npm run build && npm run preview
+```
+
+Other commands:
+
+| Command | What it does |
+|---|---|
+| `npm test` | Runs the automated tests |
+| `npm run seed-doc` | Rebuilds `docs/seed-review-fr.md` (the readable course) after editing course files |
+| `npm run icons` | Rebuilds the app icons and iPhone splash screens |
+
+## 2. Put it online (GitHub Pages)
+
+The app is a set of static files, so GitHub Pages hosts it for free. You set this up once:
+
+1. On github.com, create a new **empty** repository called `parlons` (no README or licence).
+2. In Terminal, in the project folder, replace `YOUR-USERNAME` and run these one at a time:
+
+   ```bash
+   git remote add origin https://github.com/YOUR-USERNAME/parlons.git
+   ```
+
+   ```bash
+   git push -u origin main
+   ```
+
+3. On GitHub, open the repository, then go to **Settings → Pages**. Under **Build and deployment → Source**, choose **GitHub Actions**.
+4. Open the **Actions** tab and wait for "Deploy to GitHub Pages" to show a green tick (about 1–2 minutes).
+5. Your app is now at `https://YOUR-USERNAME.github.io/parlons/`.
+
+After that, every `git push` publishes a new version automatically. Installed copies show an **Update** banner the next time they're opened online.
+
+> GitHub Pages is normally reachable from Russia. If it's ever blocked, the installed app keeps working offline; only updates wait.
+
+## 3. Install it on each device
+
+Open your app's web address on the device, then:
+
+- **iPhone or iPad:** use Safari → **Share** button → **Add to Home Screen** → **Add**. Open it once while online so it saves itself for offline use.
+- **Mac:** use Safari → **File → Add to Dock…** Or in Chrome, click the install icon in the address bar.
+- **Android:** use Chrome → ⋮ menu → **Add to Home screen** → **Install**.
+- **Windows or Linux laptop:** use Chrome or Edge → install icon in the address bar.
+
+The app also has these steps built in: **Settings → Install Parlons on this device**.
+
+## 4. Back up, and move data between devices
+
+Each device keeps its own data, with no cloud sync. Backups are how you protect your data and move it between devices.
+
+- **Back up:** go to **Settings → Export backup**. On iPhone, the share sheet opens; choose **Save to Files** (iCloud Drive is ideal). On a laptop, a `.zip` file downloads. The file contains everything, including your voice recordings.
+- **Restore or move to another device:** on the new device, go to **Settings → Import a backup…** and pick the zip. You'll see a preview of what's inside, then choose:
+  - **Merge:** keeps what's on this device and adds what's in the backup.
+  - **Replace:** wipes this device and restores the backup exactly.
+- The Today screen reminds you if your last backup is more than a week old.
+
+## 5. Reviewing and editing the course
+
+The whole 12-week French course is in `docs/seed-review-fr.md` (readable on GitHub). In the app, open the **Course** tab: tap **Edit** on any phrase to fix or hide it. Items marked ⚑ are ones worth double-checking.
+
+To change the course for everyone, edit the files in `src/packs/fr/`, then run `npm run seed-doc`.
+
+## 6. Optional AI voice mode
+
+Not built yet (Phase 4). Before it's built, you'll get a plain-language explanation of the privacy, cost and security trade-offs.
+
+## 7. How the 90-day programme is laid out
+
+- The programme runs for 90 days from your start date.
+- Weekly reviews are always on Sunday, so weeks 2–12 run Monday to Sunday.
+- Week 1 absorbs the difference:
+  - **Start on a Monday:** a normal 7-day week 1.
+  - **Start on a Tuesday or Wednesday:** a short week 1.
+  - **Start Thursday to Sunday:** a long week 1 (8–11 days).
+- The 2–8 days left after week 12 are the **final stretch**: catch-up and conversation practice.
