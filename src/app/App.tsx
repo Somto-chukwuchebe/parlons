@@ -7,6 +7,7 @@ import { Onboarding } from '../routes/Onboarding'
 import { Course } from '../routes/Course'
 import { Settings } from '../routes/Settings'
 import { Install } from '../routes/Install'
+import { ErrorPage } from '../routes/ErrorPage'
 
 // Hash-based URLs (…/#/course) so deep links work on GitHub Pages and offline.
 
@@ -19,9 +20,10 @@ function RequireProfile({ children }: { children: ReactNode }) {
 }
 
 const router = createHashRouter([
-  { path: '/welcome', element: <Onboarding /> },
-  { path: '/install', element: <Install /> },
+  { path: '/welcome', element: <Onboarding />, errorElement: <ErrorPage /> },
+  { path: '/install', element: <Install />, errorElement: <ErrorPage /> },
   {
+    errorElement: <ErrorPage />,
     element: (
       <RequireProfile>
         <Layout />

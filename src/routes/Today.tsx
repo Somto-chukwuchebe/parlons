@@ -1,62 +1,156 @@
+import { useState } from 'react'
 import { Link } from 'react-router'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { format } from 'date-fns'
+import { Award, CalendarCheck, ChevronRight, Layers, Mic, Play, ShieldAlert, Sparkles } from 'lucide-react'
 import { useApp } from '../app/AppContext'
-import { Card, Notice } from '../components/ui'
-import { APP_NAME, BACKUP_REMINDER_DAYS, PROGRAM_DAYS } from '../config'
+import { Button, Card, Eyebrow, Notice, ProgressRing, Segmented, StatPill, StreakBadge } from '../components/ui'
+import { MetroLineCompact } from '../components/MetroLine'
+import { APP_NAME, BACKUP_REMINDER_DAYS, CURRICULUM_WEEKS, PROGRAM_DAYS } from '../config'
+import { db, type SessionMode } from '../db/schema'
 import { contentWeek, fromDayKey, isReviewDay, phaseOn } from '../lib/program'
+import { currentStreak, totalsByDay } from '../lib/streak'
 
 export function Today() {
-  const { pack, plan, today, profile, settings } = useApp()
+  const { pack, plan, today, profile, settings, lang } = useApp()
+  const sessions = useLiveQuery(() => db.sessions.where('lang').equals(lang).toArray(), [lang], [])
+  const canDo = useLiveQuery(() => db.canDo.where('lang').equals(lang).toArray(), [lang], [])
+  const [mode, setMode] = useState<SessionMode>(profile?.dailyMinutes ?? 30)
   if (!plan || !profile) return null
+
   const phase = phaseOn(plan, today)
-  const week = pack.weeks[contentWeek(plan, today) - 1]
-  const backupDue =
-    !settings.lastBackupAt || Date.now() - settings.lastBackupAt > BACKUP_REMINDER_DAYS * 86_400_000
+  const weekNo = contentWeek(plan, today)
+  const week = pack.weeks[weekNo - 1]
+  const totals = totalsByDay(sessions)
+  const streak = currentStreak(totals, today)
+  const minutesToday = Math.round((totals.get(today) ?? 0) / 60)
+  const target = profile.dailyMinutes
+  const daysStudied = [...totals.values()].filter((s) => s >= 600).length
+  const spokenMin = Math.round(sessions.reduce((n, s) => n + s.spokenSec, 0) / 60)
+  const ticked = new Set(canDo.filter((c) => c.week === weekNo).map((c) => c.index))
+  const backupDue = !settings.lastBackupAt || Date.now() - settings.lastBackupAt > BACKUP_REMINDER_DAYS * 86_400_000
+
+  const heading =
+    phase.kind === 'before'
+      ? `${APP_NAME} starts in ${phase.daysUntil} day${phase.daysUntil === 1 ? '' : 's'}`
+      : phase.kind === 'week'
+        ? `Week ${phase.week} · Day ${phase.dayOfProgram}`
+        : phase.kind === 'final'
+          ? `Final stretch · Day ${phase.dayOfProgram}`
+          : 'Programme complete!'
 
   return (
-    <div className="space-y-4">
-      <header>
-        <p className="text-sm text-muted">{format(fromDayKey(today), 'EEEE d MMMM')}</p>
-        <h1 className="text-2xl font-semibold">
-          {phase.kind === 'before' && `${APP_NAME} starts in ${phase.daysUntil} day${phase.daysUntil === 1 ? '' : 's'}`}
-          {phase.kind === 'week' && `Week ${phase.week} · Day ${phase.dayOfProgram} of ${PROGRAM_DAYS}`}
-          {phase.kind === 'final' && `Final stretch · Day ${phase.dayOfProgram} of ${PROGRAM_DAYS}`}
-          {phase.kind === 'after' && 'Programme complete — félicitations !'}
-        </h1>
+    <div className="space-y-6">
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <Eyebrow>{format(fromDayKey(today), 'EEEE d MMMM')}</Eyebrow>
+          <h1 className="mt-1 text-3xl font-black leading-tight sm:text-4xl">{heading}</h1>
+          {phase.kind !== 'before' && phase.kind !== 'after' && (
+            <p className="mt-1 font-semibold text-muted">
+              {PROGRAM_DAYS - phase.dayOfProgram} days to go in your {PROGRAM_DAYS}-day programme
+            </p>
+          )}
+        </div>
+        <StreakBadge days={streak} size="lg" />
       </header>
 
       {!profile.seedApprovedAt && (
-        <Notice tone="warn">
-          Please <Link to="/course" className="font-semibold underline">review and approve the course</Link> first.
+        <Notice tone="warn" icon={<Sparkles size={20} />}>
+          One thing first:{' '}
+          <Link to="/course" className="underline decoration-2 underline-offset-2">
+            review and approve your course
+          </Link>
+          .
         </Notice>
       )}
 
-      {isReviewDay(plan, today) && <Notice>Your weekly review is due today.</Notice>}
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* Hero: today's session */}
+        <Card className="relative overflow-hidden lg:col-span-3">
+          <div className="pointer-events-none absolute -top-16 -right-16 hidden h-56 w-56 rounded-full bg-accent-soft sm:block" aria-hidden />
+          <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+            <ProgressRing value={minutesToday} max={target} size={148} stroke={14} label={`${minutesToday} of ${target} minutes today`}>
+              <div>
+                <p className="text-4xl font-black leading-none">{minutesToday}</p>
+                <p className="mt-1 text-xs font-extrabold text-muted">of {target} min</p>
+              </div>
+            </ProgressRing>
+            <div className="w-full min-w-0 flex-1 space-y-4">
+              <div>
+                <Eyebrow>Today's session</Eyebrow>
+                <p className="mt-1 text-2xl font-black leading-tight">
+                  {minutesToday >= target ? 'Goal reached. Bravo!' : 'Ready to talk?'}
+                </p>
+              </div>
+              <Segmented
+                label="Session length"
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { value: 10, label: '10' },
+                  { value: 30, label: '30' },
+                  { value: 45, label: '45' },
+                  { value: 60, label: '60 min' },
+                ]}
+              />
+              <Button variant="primary" size="xl" className="w-full" icon={<Play size={24} fill="currentColor" />} disabled>
+                Start session
+              </Button>
+              <p className="text-center text-xs font-bold text-muted">Sessions arrive in the next build.</p>
+            </div>
+          </div>
+        </Card>
 
-      <Card className="space-y-2 border-accent">
-        <p className="text-sm font-medium text-accent">
-          {phase.kind === 'before' ? 'First up' : 'This week'}: week {week.week}
-        </p>
-        <h2 className="text-xl font-semibold">{week.theme}</h2>
-        <p className="text-sm text-muted">{week.grammar}</p>
-        <ul className="list-disc space-y-1 pl-5 text-sm">
-          {week.canDo.map((c) => (
-            <li key={c}>{c}</li>
-          ))}
-        </ul>
-      </Card>
+        {/* This week's station */}
+        <Card className="lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <Eyebrow className="text-rouge">Station {week.week} of {CURRICULUM_WEEKS}</Eyebrow>
+            <Link to="/course" className="flex items-center text-sm font-extrabold text-accent">
+              Line <ChevronRight size={18} />
+            </Link>
+          </div>
+          <h2 className="mt-1 text-xl font-black leading-snug">{week.theme}</h2>
+          <p className="text-sm font-semibold text-muted">{week.grammar}</p>
+          <div className="my-5">
+            <MetroLineCompact total={CURRICULUM_WEEKS} current={phase.kind === 'before' ? 0.5 : weekNo} />
+          </div>
+          <Eyebrow className="mb-2">Goals to earn this week</Eyebrow>
+          <ul className="space-y-2">
+            {week.canDo.map((c, i) => {
+              const done = ticked.has(i)
+              return (
+                <li key={c} className="flex items-start gap-3">
+                  <span
+                    className={
+                      done
+                        ? 'grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gold text-[#3d2a00]'
+                        : 'grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-dashed border-line text-muted'
+                    }
+                    aria-hidden
+                  >
+                    <Award size={16} strokeWidth={2.6} />
+                  </span>
+                  <span className={done ? 'text-sm font-bold' : 'text-sm font-semibold text-muted'}>{c}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </Card>
+      </div>
 
-      <Card>
-        <p className="text-sm text-muted">
-          Daily sessions arrive in the next build. For now you can review the course, set up backups and install the
-          app.
-        </p>
-      </Card>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatPill icon={<Layers size={22} />} value={0} label="Phrases due" />
+        <StatPill icon={<Mic size={22} />} value={`${spokenMin} min`} label="Spoken so far" tone="rouge" />
+        <StatPill icon={<CalendarCheck size={22} />} value={daysStudied} label="Days studied" tone="good" />
+        <StatPill icon={<Award size={22} />} value={canDo.length} label="Goals earned" tone="gold" />
+      </div>
+
+      {isReviewDay(plan, today) && <Notice icon={<CalendarCheck size={20} />}>Your weekly review is due today.</Notice>}
 
       {backupDue && (
-        <Notice tone="warn">
+        <Notice tone="warn" icon={<ShieldAlert size={20} />}>
           {settings.lastBackupAt ? "It's been over a week since your last backup." : "You haven't backed up yet."}{' '}
-          <Link to="/settings" className="font-semibold underline">
+          <Link to="/settings" className="underline decoration-2 underline-offset-2">
             Back up now
           </Link>
         </Notice>

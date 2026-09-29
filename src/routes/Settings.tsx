@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { ArchiveRestore, Download, HardDrive, Languages, Palette, ShieldAlert, ShieldCheck, SlidersHorizontal, Smartphone, Upload } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { useApp } from '../app/AppContext'
-import { Button, Card, Notice, PageHeader, Segmented } from '../components/ui'
+import { Button, Card, LinkButton, Notice, PageHeader, Segmented, Toggle } from '../components/ui'
 import { updateSettings } from '../db/schema'
 import { BackupError, deliverBackup, exportBackup, parseBackup, restoreBackup, type ParsedBackup } from '../lib/backup'
 import { formatBytes, requestPersistence, storageErrorMessage, storageEstimate } from '../lib/storage'
@@ -83,146 +83,147 @@ export function Settings() {
   }
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Settings" />
-
-      <Card className="space-y-3">
-        <h2 className="font-semibold">Appearance</h2>
-        <Segmented
-          label="Theme"
-          value={settings.theme}
-          onChange={(theme) => updateSettings({ theme })}
-          options={[
-            { value: 'system', label: 'Auto' },
-            { value: 'light', label: 'Light' },
-            { value: 'dark', label: 'Dark' },
-          ]}
-        />
-        <label className="flex min-h-12 items-center justify-between gap-3">
-          <span>Show English translations</span>
-          <input
-            type="checkbox"
-            className="h-6 w-6 accent-[var(--accent)]"
-            checked={settings.showEnglish}
-            onChange={(e) => updateSettings({ showEnglish: e.target.checked })}
+    <div>
+      <PageHeader title="Settings" subtitle="Your data stays on this device." />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="space-y-4">
+          <CardTitle icon={<Palette size={22} />} title="Appearance" />
+          <Segmented
+            label="Theme"
+            value={settings.theme}
+            onChange={(theme) => updateSettings({ theme })}
+            options={[
+              { value: 'system', label: 'Auto' },
+              { value: 'light', label: 'Light' },
+              { value: 'dark', label: 'Dark' },
+            ]}
           />
-        </label>
-      </Card>
+          <Toggle
+            label="Show English translations"
+            hint="Hide them to test yourself; you can still reveal them per card."
+            checked={settings.showEnglish}
+            onChange={(v) => updateSettings({ showEnglish: v })}
+          />
+        </Card>
 
-      <Card className="space-y-3">
-        <h2 className="font-semibold">Backup and moving devices</h2>
-        <p className="text-sm text-muted">
-          One file with everything: progress, phrases and all your recordings.{' '}
-          {settings.lastBackupAt
-            ? `Last backup ${formatDistanceToNow(settings.lastBackupAt, { addSuffix: true })}.`
-            : 'No backup yet.'}
-        </p>
-        <Button className="w-full" onClick={doExport} disabled={busy}>
-          {busy ? 'Working…' : 'Export backup'}
-        </Button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".zip,application/zip"
-          className="sr-only"
-          id="import-file"
-          onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
-        />
-        <Button variant="secondary" className="w-full" onClick={() => fileRef.current?.click()} disabled={busy}>
-          Import a backup…
-        </Button>
-
-        {pending && (
-          <div className="space-y-3 rounded-xl border border-line p-3">
-            <p className="font-medium">
-              Backup from {format(pending.preview.exportedAt, 'd MMM yyyy, HH:mm')} ·{' '}
-              {formatBytes(pending.preview.sizeBytes)}
-            </p>
-            <ul className="grid grid-cols-2 gap-x-4 text-sm">
-              {Object.entries(pending.preview.counts)
-                .filter(([k, n]) => n > 0 && TABLE_LABELS[k])
-                .map(([k, n]) => (
-                  <li key={k}>
-                    {TABLE_LABELS[k]}: <strong>{n}</strong>
-                  </li>
-                ))}
-            </ul>
-            <Segmented
-              label="Import mode"
-              value={mode}
-              onChange={setMode}
-              options={[
-                { value: 'merge', label: 'Merge' },
-                { value: 'replace', label: 'Replace' },
-              ]}
-            />
-            <p className="text-sm text-muted">
-              {mode === 'merge'
-                ? 'Keeps everything on this device and adds what the backup has that this device doesn’t.'
-                : 'Deletes everything on this device first, then loads the backup exactly.'}
-            </p>
-            <div className="flex gap-2">
-              <Button variant={mode === 'replace' ? 'danger' : 'primary'} onClick={doRestore} disabled={busy}>
-                {mode === 'replace' ? 'Replace my data' : 'Merge'}
-              </Button>
-              <Button variant="secondary" onClick={() => setPending(null)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
-        {message && <Notice tone={message.tone}>{message.text}</Notice>}
-      </Card>
-
-      <Card className="space-y-2">
-        <h2 className="font-semibold">Storage on this device</h2>
-        {storage ? (
-          <>
-            <p className="text-sm">
-              Using <strong>{formatBytes(storage.usage)}</strong>
-              {storage.quota ? ` of about ${formatBytes(storage.quota)} available` : ''}.
-            </p>
-            <div className="h-2 overflow-hidden rounded-full bg-line" aria-hidden>
-              <div
-                className="h-full bg-accent"
-                style={{ width: `${Math.min(100, (storage.usage / Math.max(storage.quota, 1)) * 100)}%` }}
-              />
-            </div>
-          </>
-        ) : (
-          <p className="text-sm text-muted">This browser doesn't report storage usage.</p>
-        )}
-        <p className="text-sm text-muted">
-          {settings.storagePersisted
-            ? 'Protected: the browser won’t clear this data to free up space.'
-            : 'Not yet protected: the browser could clear data if the device runs low on space. Installing the app to your home screen usually fixes this.'}
-        </p>
-        {!settings.storagePersisted && (
-          <Button
-            variant="secondary"
-            onClick={async () => updateSettings({ storagePersisted: await requestPersistence() })}
-          >
-            Ask to protect my data
+        <Card className="space-y-4 self-start">
+          <CardTitle icon={<ArchiveRestore size={22} />} title="Backup and moving devices" />
+          <p className="font-semibold text-muted">
+            One file with everything: progress, phrases and all your recordings.{' '}
+            {settings.lastBackupAt
+              ? `Last backup ${formatDistanceToNow(settings.lastBackupAt, { addSuffix: true })}.`
+              : 'No backup yet.'}
+          </p>
+          <Button variant="primary" size="lg" className="w-full" icon={<Download size={20} />} onClick={doExport} disabled={busy}>
+            {busy ? 'Working…' : 'Export backup'}
           </Button>
-        )}
-      </Card>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".zip,application/zip"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden
+            onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
+          />
+          <Button size="lg" className="w-full" icon={<Upload size={20} />} onClick={() => fileRef.current?.click()} disabled={busy}>
+            Import a backup…
+          </Button>
 
-      <Card className="space-y-2">
-        <h2 className="font-semibold">Course</h2>
-        <p className="text-sm">
-          Learning: <strong>{pack.name}</strong> ({pack.nativeName})
-        </p>
-        <p className="text-sm text-muted">More languages coming.</p>
-        <Link to="/welcome" className="inline-block py-2 text-accent">
-          Change start date, daily time or voice →
-        </Link>
-      </Card>
+          {pending && (
+            <div className="space-y-4 rounded-2xl bg-sunk p-4">
+              <p className="font-black">
+                Backup from {format(pending.preview.exportedAt, 'd MMM yyyy, HH:mm')} · {formatBytes(pending.preview.sizeBytes)}
+              </p>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm font-semibold">
+                {Object.entries(pending.preview.counts)
+                  .filter(([k, n]) => n > 0 && TABLE_LABELS[k])
+                  .map(([k, n]) => (
+                    <li key={k}>
+                      {TABLE_LABELS[k]}: <strong>{n}</strong>
+                    </li>
+                  ))}
+              </ul>
+              <Segmented
+                label="Import mode"
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { value: 'merge', label: 'Merge' },
+                  { value: 'replace', label: 'Replace' },
+                ]}
+              />
+              <p className="text-sm font-semibold text-muted">
+                {mode === 'merge'
+                  ? 'Keeps everything on this device and adds what the backup has that this device doesn\u2019t.'
+                  : 'Deletes everything on this device first, then loads the backup exactly.'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button variant={mode === 'replace' ? 'rouge' : 'primary'} onClick={doRestore} disabled={busy}>
+                  {mode === 'replace' ? 'Replace my data' : 'Merge'}
+                </Button>
+                <Button onClick={() => setPending(null)}>Cancel</Button>
+              </div>
+            </div>
+          )}
+          {message && <Notice tone={message.tone}>{message.text}</Notice>}
+        </Card>
 
-      <Card>
-        <Link to="/install" className="block py-2 text-accent">
-          Install {APP_NAME} on this device →
-        </Link>
-      </Card>
+        <Card className="space-y-3">
+          <CardTitle icon={<HardDrive size={22} />} title="Storage on this device" />
+          {storage ? (
+            <>
+              <p className="font-semibold">
+                Using <strong>{formatBytes(storage.usage)}</strong>
+                {storage.quota ? ` of about ${formatBytes(storage.quota)} available` : ''}.
+              </p>
+              <div className="h-3 overflow-hidden rounded-full bg-sunk" aria-hidden>
+                <div className="h-full rounded-full bg-accent" style={{ width: `${Math.max(2, Math.min(100, (storage.usage / Math.max(storage.quota, 1)) * 100))}%` }} />
+              </div>
+            </>
+          ) : (
+            <p className="font-semibold text-muted">This browser doesn't report storage usage.</p>
+          )}
+          {settings.storagePersisted ? (
+            <Notice tone="good" icon={<ShieldCheck size={20} />}>Protected: the browser won't clear this data to free up space.</Notice>
+          ) : (
+            <>
+              <Notice tone="warn" icon={<ShieldAlert size={20} />}>
+                Not yet protected: the browser could clear data if the device runs low on space. Installing the app usually fixes this.
+              </Notice>
+              <Button onClick={async () => updateSettings({ storagePersisted: await requestPersistence() })}>Ask to protect my data</Button>
+            </>
+          )}
+        </Card>
+
+        <Card className="space-y-3">
+          <CardTitle icon={<Languages size={22} />} title="Course" />
+          <p className="font-semibold">
+            Learning <strong>{pack.name}</strong> ({pack.nativeName})
+          </p>
+          <p className="text-sm font-semibold text-muted">More languages coming.</p>
+          <LinkButton to="/welcome" icon={<SlidersHorizontal size={18} />}>
+            Start date, daily time and voice
+          </LinkButton>
+        </Card>
+
+        <Card className="space-y-3">
+          <CardTitle icon={<Smartphone size={22} />} title={`Install ${APP_NAME}`} />
+          <p className="text-sm font-semibold text-muted">Home screen or Dock, full-screen, and offline on the metro.</p>
+          <LinkButton to="/install" icon={<Download size={18} />}>
+            How to install on this device
+          </LinkButton>
+        </Card>
+      </div>
     </div>
+  )
+}
+
+function CardTitle({ icon, title }: { icon: ReactNode; title: string }) {
+  return (
+    <h2 className="flex items-center gap-3 text-xl font-black">
+      <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent-soft text-accent">{icon}</span>
+      {title}
+    </h2>
   )
 }

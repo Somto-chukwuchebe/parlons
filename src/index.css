@@ -1,71 +1,96 @@
 @import 'tailwindcss';
+/* Bundled font (no Google Fonts, works offline and in Russia). Unicode ranges mean
+   the browser only loads the subsets a page needs. */
+@import '@fontsource-variable/nunito/wght.css';
 
 /* Dark mode follows the `dark` class on <html>, set from settings (system/light/dark). */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Colour tokens. The accent comes from the active language pack and is set at runtime
-   on <html> as --pack-accent / --pack-accent-soft (see lib/theme.ts). */
+   on <html> as --pack-accent… (see lib/theme.ts). Brand colours (navy, rouge, gold) are Parlons'.
+   Roles: accent = actions and the learner's path; rouge = streak and recording;
+   gold = achievements; good/hard/again = grading. */
 :root {
-  --bg: #faf8f5;
+  --bg: #f4f6fb;
   --surface: #ffffff;
-  --ink: #1a1d24;
-  --muted: #5b6170;
-  --line: #e4e0d9;
+  --sunk: #eaeef7;
+  --line: #dce2ee;
+  --ink: #14213d;
+  --muted: #56617c;
+  --navy: #0f2a6b;
   --accent: var(--pack-accent, #1f4fb8);
-  --accent-soft: var(--pack-accent-soft, #e8eefb);
+  --accent-soft: var(--pack-accent-soft, #e3eafb);
   --on-accent: #ffffff;
   --rouge: #d7352a;
-  --again: #c2410c;
+  --rouge-soft: #fde6e3;
+  --gold: #f5b400;
+  --gold-soft: #fff3cc;
+  --gold-ink: #6b4a00;
+  --good: #1d8a4c;
+  --good-soft: #dcf5e6;
   --hard: #9a6212;
-  --good: #2e7d4f;
-  --easy: var(--accent);
+  --again: #c2410c;
   --warn-bg: #fdf3e1;
   --warn-ink: #7a4a05;
   --danger-bg: #fdeceb;
   --danger-ink: #9b1c14;
+  --focus: #1f5fbf;
   color-scheme: light;
 }
 
 .dark {
-  --bg: #111418;
-  --surface: #1a1e24;
-  --ink: #eceef2;
-  --muted: #9aa1ae;
-  --line: #2a3039;
+  --bg: #0b1020;
+  --surface: #141b2e;
+  --sunk: #0f1526;
+  --line: #26304a;
+  --ink: #e8ecf6;
+  --muted: #9aa4bf;
+  --navy: #0f2a6b;
   --accent: var(--pack-accent-dark, #7fa3ff);
   --accent-soft: var(--pack-accent-soft-dark, #1b2a4d);
-  --on-accent: #0c1530;
+  --on-accent: #0b1330;
   --rouge: #ff6b5e;
-  --again: #fb923c;
+  --rouge-soft: #3d1a18;
+  --gold: #ffc94d;
+  --gold-soft: #3a2e0e;
+  --gold-ink: #ffe29a;
+  --good: #4ade80;
+  --good-soft: #13331f;
   --hard: #f6c35b;
-  --good: #5fd08e;
+  --again: #fb923c;
   --warn-bg: #3a2c10;
   --warn-ink: #f6d58e;
   --danger-bg: #3d1614;
   --danger-ink: #ffb4ad;
+  --focus: #9dbcff;
   color-scheme: dark;
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
+  --color-sunk: var(--sunk);
+  --color-line: var(--line);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
-  --color-line: var(--line);
+  --color-navy: var(--navy);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
   --color-rouge: var(--rouge);
-  --color-again: var(--again);
-  --color-hard: var(--hard);
+  --color-rouge-soft: var(--rouge-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-ink: var(--gold-ink);
   --color-good: var(--good);
-  --color-easy: var(--easy);
+  --color-good-soft: var(--good-soft);
+  --color-hard: var(--hard);
+  --color-again: var(--again);
   --color-warn-bg: var(--warn-bg);
   --color-warn-ink: var(--warn-ink);
   --color-danger-bg: var(--danger-bg);
   --color-danger-ink: var(--danger-ink);
-  /* System fonts only: nothing is fetched from the network. */
-  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Nunito Variable', ui-rounded, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 html,
@@ -78,30 +103,64 @@ body {
 
 body {
   font-family: var(--font-sans);
+  font-feature-settings: 'tnum' 0;
   min-height: 100dvh;
   overscroll-behavior-y: none;
 }
 
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
+}
+
 /* Visible keyboard focus everywhere. */
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 10px;
 }
 
-/* Safe areas for notches and the home indicator in standalone mode. */
-.pt-safe { padding-top: max(env(safe-area-inset-top), 0.75rem); }
-.pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
-.px-safe {
-  padding-left: max(env(safe-area-inset-left), 1rem);
-  padding-right: max(env(safe-area-inset-right), 1rem);
+/* "Pressable" game-style buttons: a solid lip underneath that squashes on press.
+   --lip is set per variant in components/ui.tsx. */
+.press {
+  box-shadow: 0 4px 0 0 var(--lip, transparent);
+  transform: translateY(0);
+  transition: transform 80ms ease, box-shadow 80ms ease, filter 120ms ease;
+}
+.press:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.press:active:not(:disabled) {
+  box-shadow: 0 1px 0 0 var(--lip, transparent);
+  transform: translateY(3px);
 }
 
-/* Target-language text: slightly larger and never breaks before French punctuation. */
+/* Safe areas: notch/home-bar padding adds to the page margins. */
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Target-language text. */
 .tl {
-  font-size: 1.125em;
   line-height: 1.45;
 }
+
+@keyframes pop-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.pop-in { animation: pop-in 380ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+
+@keyframes flicker {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.06) rotate(-2deg); }
+}
+.flicker { animation: flicker 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

@@ -26,6 +26,17 @@ features beyond it without asking; suggest them at the end of a phase.
 - `src/app/` — providers, router (hash router for GitHub Pages), layout. `src/routes/` — screens.
 - Seed edits by the learner live in `seedOverrides` (the pack stays untouched); `lib/seed.ts` merges them.
 
+## Design system (Parlons' own identity — deliberately not Red Pen's)
+- Friendly, lightly gamified. Font: Nunito (bundled via @fontsource-variable, cached offline).
+  Icons: lucide-react. Headings are font-black; body font-semibold.
+- Colours: pack accent (French blue) for actions/path; navy for brand panels; rouge for streak and
+  recording; gold for earned goals; good/hard/again for grading. Tokens in `src/index.css`.
+- Primary buttons are "pressable" (`.press` + `--lip`); cards are rounded-3xl with 2px borders.
+- Signature element: the course as a metro line ("stations" = weeks, `components/MetroLine.tsx`).
+- Layout: sidebar on md+, bottom tab bar on phones; pages use max-w-6xl and 2-column grids on lg.
+- Shared pieces in `components/ui.tsx` (Button, LinkButton, Card, PageHeader, Eyebrow, fields,
+  Toggle, Segmented, ProgressRing, StreakBadge, StatPill). Reuse them; don't restyle ad hoc.
+
 ## Conventions
 - TypeScript strict, React function components, Tailwind v4 with colour tokens in `src/index.css`
   (`bg-accent`, `text-muted`, `bg-surface`, …). No hard-coded colours in components.
@@ -37,7 +48,8 @@ features beyond it without asking; suggest them at the end of a phase.
 
 ## Status
 - Phase 1 (foundation) done: PWA/install page, French pack, Dexie schema, seed review, backup, onboarding.
-- Next: Phase 2 — Today screen, guided session player, FSRS phrase bank (`ts-fsrs`).
+- Design pass done (own identity, desktop sidebar layout, streak logic in `lib/streak.ts`).
+- Next: Phase 2 — session player, FSRS phrase bank (`ts-fsrs`), wire up Today's Start button.
 
 ## Agreed decisions (from chat with the owner)
 - Logo: option D4 (navy tile, red stem, white speech-bubble "p"). Palette as in `src/index.css`.

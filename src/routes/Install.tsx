@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link } from 'react-router'
-import { Button, Card, Notice } from '../components/ui'
+import { Download } from 'lucide-react'
+import { Button, Card, Notice, PageHeader } from '../components/ui'
 import { APP_NAME } from '../config'
 import { canPromptInstall, detectPlatform, isStandalone, onInstallAvailability, promptInstall, type Platform } from '../lib/install'
 
@@ -75,47 +75,50 @@ export function Install() {
   const others = GUIDES.filter((g) => g.id !== platform)
 
   return (
-    <div className="pt-safe px-safe pb-safe mx-auto max-w-xl space-y-4 py-6">
-      <header className="flex items-center gap-2">
-        <Link to="/settings" className="-ml-2 rounded-lg p-2 text-accent" aria-label="Back">
-          ←
-        </Link>
-        <h1 className="text-2xl font-semibold">Install on this device</h1>
-      </header>
+    <div className="safe-top safe-x safe-bottom mx-auto max-w-2xl space-y-5 px-5 py-8">
+      <PageHeader back="/settings" title="Install on this device" subtitle={`${APP_NAME} works best installed: full-screen, offline, and safer for your data.`} />
 
       {standalone ? (
         <Notice>You're using the installed app. Nothing else to do here.</Notice>
       ) : (
-        <p className="text-muted">
-          Installing puts {APP_NAME} on your home screen or Dock, runs it full-screen, works offline (e.g. on the
-          metro) and makes it much less likely your data gets cleared.
+        <p className="font-semibold text-muted">
+          Installing puts {APP_NAME} on your home screen or Dock, works offline (e.g. on the metro) and makes it much less
+          likely your data gets cleared.
         </p>
       )}
 
       {canPrompt && !standalone && (
-        <Button size="lg" className="w-full" onClick={() => promptInstall().then(() => setCanPrompt(false))}>
+        <Button variant="primary" size="xl" className="w-full" icon={<Download size={24} />} onClick={() => promptInstall().then(() => setCanPrompt(false))}>
           Install {APP_NAME}
         </Button>
       )}
 
       {mine && (
         <Card className="border-accent">
-          <h2 className="mb-2 font-semibold">{mine.title} — this device</h2>
-          <ol className="list-decimal space-y-2 pl-5">{mine.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-accent">This device</p>
+          <h2 className="mb-4 text-2xl font-black">{mine.title}</h2>
+          <ol className="space-y-3">
+            {mine.steps.map((s, i) => (
+              <li key={i} className="flex gap-3 font-semibold">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent text-sm font-black text-on-accent">{i + 1}</span>
+                <span className="pt-1">{s}</span>
+              </li>
+            ))}
+          </ol>
         </Card>
       )}
 
-      <h2 className="pt-2 font-semibold">Other devices</h2>
+      <h2 className="pt-2 text-xl font-black">Other devices</h2>
       {others.map((g) => (
-        <details key={g.id} className="rounded-2xl border border-line bg-surface p-4">
-          <summary className="cursor-pointer font-medium">{g.title}</summary>
-          <ol className="mt-2 list-decimal space-y-2 pl-5">{g.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
+        <details key={g.id} className="rounded-3xl border-2 border-line bg-surface p-5">
+          <summary className="cursor-pointer font-extrabold">{g.title}</summary>
+          <ol className="mt-3 list-decimal space-y-2 pl-5 font-semibold">{g.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
         </details>
       ))}
 
       <Card>
-        <h2 className="mb-1 font-semibold">Each device keeps its own data</h2>
-        <p className="text-sm text-muted">
+        <h2 className="mb-1 text-lg font-black">Each device keeps its own data</h2>
+        <p className="text-sm font-semibold text-muted">
           There's no account or cloud sync. To move your progress, go to Settings → Export backup on one device and
           Import it on the other.
         </p>

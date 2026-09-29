@@ -34,7 +34,7 @@ export default defineConfig({
       },
       workbox: {
         // Cache every built file so the whole app works offline.
-        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,mp3,m4a,ogg,json}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,woff2,mp3,m4a,ogg,json}'],
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         navigateFallback: 'index.html',
       },
