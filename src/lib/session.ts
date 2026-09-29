@@ -116,6 +116,31 @@ export function finishEarly(s: SessionState): SessionState {
   return { ...s, stages, index: stages.length }
 }
 
+/** Rebuild a session from what was saved, to resume it. */
+export function restoreSession(mode: SessionMode, logs: StageLog[], index: number): SessionState {
+  const fresh = createSession(mode)
+  const i = Math.max(0, Math.min(index, fresh.stages.length))
+  return {
+    mode,
+    index: i,
+    stages: fresh.stages.map((st, j) => {
+      const log = logs.find((l) => l.stage === st.stage)
+      return {
+        ...st,
+        plannedSec: log?.plannedSec ?? st.plannedSec,
+        elapsedSec: log?.actualSec ?? 0,
+        status: j < i ? (log?.skipped ? 'skipped' : 'done') : j === i ? 'active' : 'pending',
+      }
+    }),
+  }
+}
+
+/** Resume only a session from today that has started and isn't finished. */
+export function isResumable(row: { completed: boolean; day: string; currentIndex?: number; stages: StageLog[] }, today: string) {
+  const spent = row.stages.reduce((n, l) => n + l.actualSec, 0)
+  return !row.completed && row.day === today && row.currentIndex !== undefined && row.currentIndex < row.stages.length && spent >= 30
+}
+
 /** What gets saved: actual seconds per stage. */
 export function toStageLogs(s: SessionState): StageLog[] {
   return s.stages.map((st) => ({

@@ -1,5 +1,7 @@
 import {
   createSession,
+  isResumable,
+  restoreSession,
   current,
   extend,
   finishEarly,
@@ -97,5 +99,27 @@ describe('session timing', () => {
     let s = finishEarly(createSession(10))
     s = tick(s, 100)
     expect(totalSec(s)).toBe(0)
+  })
+
+  it('restores a saved session at the same stage with its time', () => {
+    let s = createSession(45)
+    s = next(tick(s, 7 * 60)) // review done
+    s = skip(tick(s, 60)) // structure skipped after 1 min
+    s = tick(extend(s), 4 * 60) // shadowing in progress, extended
+    const restored = restoreSession(45, toStageLogs(s), s.index)
+    expect(restored.index).toBe(2)
+    expect(restored.stages.map((x) => x.status)).toEqual(['done', 'skipped', 'active', 'pending', 'pending'])
+    expect(current(restored)!.elapsedSec).toBe(4 * 60)
+    expect(current(restored)!.plannedSec).toBe(11 * 60)
+    expect(totalSec(restored)).toBe(totalSec(s))
+  })
+
+  it('offers resume only for today, unfinished sessions with some time spent', () => {
+    const s = tick(createSession(30), 120)
+    const row = { completed: false, day: '2026-10-01', currentIndex: 0, stages: toStageLogs(s) }
+    expect(isResumable(row, '2026-10-01')).toBe(true)
+    expect(isResumable(row, '2026-10-02')).toBe(false)
+    expect(isResumable({ ...row, completed: true }, '2026-10-01')).toBe(false)
+    expect(isResumable({ ...row, stages: toStageLogs(tick(createSession(30), 5)) }, '2026-10-01')).toBe(false)
   })
 })

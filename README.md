@@ -94,6 +94,8 @@ Skip or add 2 minutes to any stage; a soft chime tells you when a stage's time i
 
 The **10-minute** option is review plus speaking, for busy days.
 
+Interrupted? Your progress saves as you go (and the moment you leave the app). Today then shows **Pick up where you left off**: tap **Resume** to continue at the same stage, or **Dismiss**. Time already spent always counts.
+
 Missed a few days? Reviews are capped per session, so there is never a mountain waiting; the rest are rescheduled.
 
 ## 6. Reviewing and editing the course

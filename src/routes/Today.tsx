@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { format } from 'date-fns'
-import { Award, CalendarCheck, ChevronRight, Layers, Mic, Play, ShieldAlert, Sparkles } from 'lucide-react'
+import { Award, CalendarCheck, ChevronRight, History, Layers, Mic, Play, ShieldAlert, Sparkles } from 'lucide-react'
 import { useApp } from '../app/AppContext'
 import { Button, Card, Eyebrow, Notice, ProgressRing, Segmented, StatPill, StreakBadge } from '../components/ui'
 import { MetroLineCompact } from '../components/MetroLine'
@@ -11,6 +11,7 @@ import { db, type SessionMode } from '../db/schema'
 import { contentWeek, fromDayKey, isReviewDay, phaseOn } from '../lib/program'
 import { currentStreak, totalsByDay } from '../lib/streak'
 import { ensureDeck, queueStats, type QueueStats } from '../lib/srs'
+import { formatDuration, isResumable, STAGE_INFO } from '../lib/session'
 
 export function Today() {
   const { pack, plan, today, profile, settings, lang } = useApp()
@@ -40,6 +41,9 @@ export function Today() {
   const daysStudied = [...totals.values()].filter((s) => s >= 600).length
   const spokenMin = Math.round(sessions.reduce((n, s) => n + s.spokenSec, 0) / 60)
   const ticked = new Set(canDo.filter((c) => c.week === weekNo).map((c) => c.index))
+  const resumable = sessions
+    .filter((s) => isResumable(s, today))
+    .sort((a, b) => b.startedAt - a.startedAt)[0]
   const backupDue = !settings.lastBackupAt || Date.now() - settings.lastBackupAt > BACKUP_REMINDER_DAYS * 86_400_000
 
   const heading =
@@ -74,6 +78,35 @@ export function Today() {
           </Link>
           .
         </Notice>
+      )}
+
+      {resumable && (
+        <Card className="pop-in flex flex-col gap-4 border-accent bg-accent-soft sm:flex-row sm:items-center">
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-accent text-on-accent">
+            <History size={28} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-lg font-black">Pick up where you left off</p>
+            <p className="text-sm font-semibold text-muted">
+              {resumable.mode}-minute session · stage {(resumable.currentIndex ?? 0) + 1} of {resumable.stages.length}:{' '}
+              {STAGE_INFO[resumable.stages[resumable.currentIndex ?? 0].stage].title} ·{' '}
+              {formatDuration(resumable.stages.reduce((n, l) => n + l.actualSec, 0))} done
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => db.sessions.update(resumable.id, { currentIndex: resumable.stages.length })}
+              aria-label="Dismiss: don't resume this session"
+            >
+              Dismiss
+            </Button>
+            <Button variant="primary" icon={<Play size={18} fill="currentColor" />} onClick={() => navigate(`/session?resume=${resumable.id}`)}>
+              Resume
+            </Button>
+          </div>
+        </Card>
       )}
 
       <div className="grid gap-6 lg:grid-cols-5">

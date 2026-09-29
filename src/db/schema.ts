@@ -92,6 +92,17 @@ export interface SessionRow {
   spokenSec: number
   completed: boolean
   externalLesson?: string // e.g. "Language Transfer track 12"
+  /** For resuming: the stage in progress, and what was done so far. */
+  currentIndex?: number
+  activity?: SessionActivity
+}
+
+export interface SessionActivity {
+  reviewed: number
+  again: number
+  recordingIds: string[]
+  shadowReps: number
+  callMinutes: number
 }
 
 export type RecordingKind = 'speak' | 'benchmark' | 'shadow' | 'selftalk' | 'fluency' | 'script' | 'snapshot'

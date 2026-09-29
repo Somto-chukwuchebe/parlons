@@ -36,6 +36,8 @@ import {
   formatDuration,
   isFinished,
   isOvertime,
+  isResumable,
+  restoreSession,
   next,
   plannedTotalSec,
   remainingSec,
@@ -66,21 +68,67 @@ interface Activity {
   callMinutes: number
 }
 
+interface Resume {
+  id: string
+  startedAt: number
+  day: string
+  state: SessionState
+  lessonLog: string
+  activity: Activity
+}
+
+const EMPTY_ACTIVITY: Activity = { review: { reviewed: 0, again: 0 }, recordings: [], shadowReps: 0, callMinutes: 0 }
+
+/** Route wrapper: starts a new session, or loads a saved one when ?resume=<id>. */
 export function Session() {
-  const { pack, lang, plan, today } = useApp()
   const [params] = useSearchParams()
-  const navigate = useNavigate()
+  const { today } = useApp()
+  const resumeId = params.get('resume')
   const modeParam = Number(params.get('mode'))
   const mode: SessionMode = ([10, 30, 45, 60] as const).includes(modeParam as SessionMode) ? (modeParam as SessionMode) : 30
+  const [resume, setResume] = useState<Resume | null | 'missing'>(resumeId ? null : 'missing')
+
+  useEffect(() => {
+    if (!resumeId) return
+    ;(async () => {
+      const row = await db.sessions.get(resumeId)
+      if (!row || !isResumable(row, today)) return setResume('missing')
+      const recordings = (await db.recordings.bulkGet(row.activity?.recordingIds ?? [])).filter((r): r is RecordingRow => !!r)
+      setResume({
+        id: row.id,
+        startedAt: row.startedAt,
+        day: row.day,
+        state: restoreSession(row.mode, row.stages, row.currentIndex ?? 0),
+        lessonLog: row.externalLesson ?? '',
+        activity: {
+          review: { reviewed: row.activity?.reviewed ?? 0, again: row.activity?.again ?? 0 },
+          recordings,
+          shadowReps: row.activity?.shadowReps ?? 0,
+          callMinutes: row.activity?.callMinutes ?? 0,
+        },
+      })
+    })()
+  }, [resumeId, today])
+
+  if (resume === null) return <p className="p-10 text-center font-bold text-muted">Picking up where you left off…</p>
+  if (resume === 'missing') return <SessionPlayer mode={mode} />
+  return <SessionPlayer mode={resume.state.mode} resume={resume} />
+}
+
+function SessionPlayer({ mode, resume }: { mode: SessionMode; resume?: Resume }) {
+  const { pack, lang, plan, today } = useApp()
+  const navigate = useNavigate()
   const week = pack.weeks[(plan ? contentWeek(plan, today) : 1) - 1]
 
-  const [session, setSession] = useState<SessionState>(() => createSession(mode))
+  const [session, setSession] = useState<SessionState>(() => resume?.state ?? createSession(mode))
   const [paused, setPaused] = useState(false)
   const [deckReady, setDeckReady] = useState(false)
-  const [lessonLog, setLessonLog] = useState('')
-  const [activity, setActivity] = useState<Activity>({ review: { reviewed: 0, again: 0 }, recordings: [], shadowReps: 0, callMinutes: 0 })
+  const [lessonLog, setLessonLog] = useState(resume?.lessonLog ?? '')
+  const [activity, setActivity] = useState<Activity>(resume?.activity ?? EMPTY_ACTIVITY)
   const [confirmEnd, setConfirmEnd] = useState(false)
-  const ids = useRef({ id: newId(), startedAt: Date.now(), day: today })
+  const ids = useRef({ id: resume?.id ?? newId(), startedAt: resume?.startedAt ?? Date.now(), day: resume?.day ?? today })
+  // Reviews done before resuming; the deck reports counts for this visit only.
+  const reviewBase = useRef(resume?.activity.review ?? { reviewed: 0, again: 0 })
   const chimed = useRef<number>(-1)
   const finished = isFinished(session)
   useWakeLock(!finished && !paused)
@@ -112,33 +160,47 @@ export function Session() {
     }
   }, [st, session.index])
 
-  // Save progress: on every stage change, every 15 s, and at the end.
-  const save = useCallback(
-    async (s: SessionState, completed: boolean) => {
-      await db.sessions.put({
-        id: ids.current.id,
-        lang,
-        day: ids.current.day,
-        mode,
-        startedAt: ids.current.startedAt,
-        endedAt: completed ? Date.now() : undefined,
-        stages: toStageLogs(s),
-        spokenSec: Math.round(speakingSec(s)),
-        completed,
-        externalLesson: lessonLog || undefined,
-      })
-    },
-    [lang, mode, lessonLog],
-  )
-  const latest = useRef(session)
-  latest.current = session
+  // Save progress: on every stage change, every 15 s, when the app is hidden, and at the end.
+  const latest = useRef({ session, lessonLog, activity })
+  latest.current = { session, lessonLog, activity }
+  const save = useCallback(async () => {
+    const { session: s, lessonLog: log, activity: a } = latest.current
+    const completed = isFinished(s)
+    await db.sessions.put({
+      id: ids.current.id,
+      lang,
+      day: ids.current.day,
+      mode: s.mode,
+      startedAt: ids.current.startedAt,
+      endedAt: completed ? Date.now() : undefined,
+      stages: toStageLogs(s),
+      spokenSec: Math.round(speakingSec(s)),
+      completed,
+      externalLesson: log || undefined,
+      currentIndex: s.index,
+      activity: {
+        reviewed: a.review.reviewed,
+        again: a.review.again,
+        recordingIds: a.recordings.map((r) => r.id),
+        shadowReps: a.shadowReps,
+        callMinutes: a.callMinutes,
+      },
+    })
+  }, [lang])
   useEffect(() => {
-    void save(session, finished)
+    void save()
     if (finished) fanfare()
-  }, [session.index])
+  }, [session.index, finished, save])
   useEffect(() => {
-    const id = setInterval(() => void save(latest.current, isFinished(latest.current)), 15_000)
-    return () => clearInterval(id)
+    const id = setInterval(() => void save(), 15_000)
+    const onHide = () => document.visibilityState === 'hidden' && void save()
+    document.addEventListener('visibilitychange', onHide)
+    window.addEventListener('pagehide', onHide)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', onHide)
+      window.removeEventListener('pagehide', onHide)
+    }
   }, [save])
 
   const act = (fn: (s: SessionState) => SessionState) => {
@@ -208,13 +270,18 @@ export function Session() {
         <div key={idx}>
           {st!.stage === 'review' &&
             (deckReady ? (
-              <ReviewDeck cap={mode === 10 ? REVIEW_CAP.short : REVIEW_CAP.full} onProgress={(review) => setActivity((a) => ({ ...a, review }))} />
+              <ReviewDeck
+                cap={session.mode === 10 ? REVIEW_CAP.short : REVIEW_CAP.full}
+                onProgress={(r) =>
+                  setActivity((a) => ({ ...a, review: { reviewed: reviewBase.current.reviewed + r.reviewed, again: reviewBase.current.again + r.again } }))
+                }
+              />
             ) : (
               <p className="py-10 text-center font-bold text-muted">Preparing your cards…</p>
             ))}
           {st!.stage === 'structure' && <StructureStage week={week} lessonLog={lessonLog} onLessonLog={setLessonLog} />}
           {st!.stage === 'shadowing' && <ShadowingStage week={week} onRep={() => setActivity((a) => ({ ...a, shadowReps: a.shadowReps + 1 }))} />}
-          {st!.stage === 'speak' && <SpeakStage week={week} count={mode === 10 ? 1 : mode === 60 ? 3 : 2} onRecorded={addRecording} />}
+          {st!.stage === 'speak' && <SpeakStage week={week} count={session.mode === 10 ? 1 : session.mode === 60 ? 3 : 2} onRecorded={addRecording} />}
           {st!.stage === 'conversation' && (
             <ConversationStage onCallLogged={(m) => setActivity((a) => ({ ...a, callMinutes: a.callMinutes + m }))} onRecorded={addRecording} />
           )}
