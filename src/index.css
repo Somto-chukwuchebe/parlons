@@ -114,6 +114,29 @@ h3 {
   letter-spacing: -0.015em;
 }
 
+/* iOS Safari gives date/time inputs a fixed intrinsic width and centred text, so they
+   overflow narrow screens. Let them size like other fields and align left. */
+input[type='date'],
+input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  text-align: left;
+  /* appearance:none drops iOS's own vertical centring */
+  padding-block: 0.7rem;
+}
+input[type='date']::-webkit-date-and-time-value,
+input[type='time']::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+}
+input[type='date']::-webkit-datetime-edit,
+input[type='time']::-webkit-datetime-edit {
+  padding: 0;
+}
+
 /* Visible keyboard focus everywhere. */
 :focus-visible {
   outline: 3px solid var(--focus);
