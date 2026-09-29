@@ -118,8 +118,10 @@ export interface RecordingRow {
   blob: Blob
   mimeType: string
   durationSec: number
-  ratings?: { fluency: number; accuracy: number; pronunciation: number }
+  ratings?: { fluency?: number; accuracy?: number; pronunciation?: number }
   transcript?: string
+  /** Then-and-now: which benchmark round (week 1, 4, 8 or 12) this recording belongs to. */
+  round?: number
   wpm?: number
   createdAt: number
 }

@@ -58,6 +58,20 @@ export type ScenarioSeed = z.infer<typeof ScenarioSeed>
 export const MistakeCategory = z.object({ id: z.string(), label: z.string(), hint: z.string() })
 export type MistakeCategory = z.infer<typeof MistakeCategory>
 
+export const AudioClip = z.object({
+  id: z.number(), // file: public/audio/<lang>/<id>.mp3
+  sentenceId: z.number(),
+  text: z.string(),
+  en: z.string(),
+  speaker: z.string(),
+  license: z.string(),
+  attribution: z.string(),
+  week: z.number(),
+  shadow: z.boolean(), // part of that week's shadowing set
+  seedIds: z.array(z.string()), // course phrases this recording says exactly
+})
+export type AudioClip = z.infer<typeof AudioClip>
+
 export const LanguagePackSchema = z.object({
   code: z.string().min(2),
   name: z.string(), // "French"
@@ -79,6 +93,8 @@ export const LanguagePackSchema = z.object({
   mistakeCategories: z.array(MistakeCategory).min(1),
   /** Seed items the author wants a second opinion on: id → reason. Shown with ⚑ in the review screen. */
   reviewFlags: z.record(z.string(), z.string()).default({}),
+  /** Bundled native-speaker recordings (optional; built by scripts/build-audio.mjs). */
+  audio: z.object({ source: z.string(), clips: z.array(AudioClip) }).optional(),
   aiTemplates: z.object({ rolePlay: z.string(), weeklyReview: z.string(), voiceSystem: z.string() }),
 })
 

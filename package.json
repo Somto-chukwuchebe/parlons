@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b",
     "icons": "node scripts/make-icons.mjs",
-    "seed-doc": "node scripts/seed-doc.mjs"
+    "seed-doc": "node scripts/seed-doc.mjs",
+    "audio": "node scripts/build-audio.mjs"
   },
   "dependencies": {
     "@fontsource-variable/nunito": "^5.3.0",

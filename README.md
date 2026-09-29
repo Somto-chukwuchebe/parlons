@@ -35,6 +35,7 @@ Other commands:
 | `npm test` | Runs the automated tests |
 | `npm run seed-doc` | Rebuilds `docs/seed-review-fr.md` (the readable course) after editing course files |
 | `npm run icons` | Rebuilds the app icons and iPhone splash screens |
+| `npm run audio` | Rebuilds the bundled native audio from Tatoeba (after editing `audio-picks.json`) |
 
 ## 2. Put it online (GitHub Pages)
 
@@ -98,17 +99,26 @@ Interrupted? Your progress saves as you go (and the moment you leave the app). T
 
 Missed a few days? Reviews are capped per session, so there is never a mountain waiting; the rest are rescheduled.
 
-## 6. Reviewing and editing the course
+## 6. Speaking tools (the Speak tab)
+
+- **Recordings:** after recording an answer, rate yourself (fluency, accuracy, pronunciation, 1–5), optionally type what you said (for words per minute), and **tag mistakes**. Each tagged mistake can become a "fix it" card: you'll see what you said and must say the correct version.
+- **Shadowing:** 12 real native-speaker sentences per week, plus model sentences and any audio you import (podcast or lesson clips). Set A and B points to loop a section, slow it to 0.5×–1.25×, record yourself, then **Play both** to compare.
+- **Then and now:** record the same three prompts in weeks 1, 4, 8 and 12, then play week 1 and your latest back to back. There's also an optional 2-minute weekly snapshot.
+- **Pronunciation check (optional):** shows what your device heard, highlighting words that differ, plus words per minute. It's approximate, needs internet, and only appears where the browser supports it (Safari on iPhone, Chrome/Edge on laptops).
+
+The native audio comes from [Tatoeba](https://tatoeba.org), used under each speaker's Creative Commons licence (CC BY-SA 4.0 or CC BY-NC 4.0); see **Settings → About and credits**. To change the clips, edit `src/packs/fr/audio-picks.json` and run `npm run audio`.
+
+## 7. Reviewing and editing the course
 
 The whole 12-week French course is in `docs/seed-review-fr.md` (readable on GitHub). In the app, open the **Course** tab: tap **Edit** on any phrase to fix or hide it. Items marked ⚑ are ones worth double-checking.
 
 To change the course for everyone, edit the files in `src/packs/fr/`, then run `npm run seed-doc`.
 
-## 7. Optional AI voice mode
+## 8. Optional AI voice mode
 
 Not built yet (Phase 4). Before it's built, you'll get a plain-language explanation of the privacy, cost and security trade-offs.
 
-## 8. How the 90-day programme is laid out
+## 9. How the 90-day programme is laid out
 
 - The programme runs for 90 days from your start date.
 - Weekly reviews are always on Sunday, so weeks 2–12 run Monday to Sunday.

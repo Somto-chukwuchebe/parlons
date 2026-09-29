@@ -7,6 +7,7 @@ import { micErrorFrom, startRecording, type ActiveRecorder } from '../lib/record
 import { storageErrorMessage } from '../lib/storage'
 import { formatClock } from '../lib/session'
 import { Button, cx, Notice } from './ui'
+import { RecordingReview } from './RecordingReview'
 
 // Big record button → live meter and timer → playback. Saves straight to the device.
 // Phase 3 adds self-ratings and mistake tagging on top of this.
@@ -16,6 +17,8 @@ export function Recorder({
   promptId,
   promptText,
   maxSec,
+  round,
+  review = 'full',
   onSaved,
   onDeleted,
 }: {
@@ -24,6 +27,10 @@ export function Recorder({
   promptText?: string
   /** Stop automatically after this many seconds (e.g. 60 for self-talk). */
   maxSec?: number
+  /** Then-and-now round (1, 4, 8 or 12). */
+  round?: number
+  /** After saving: full self-review, a single pronunciation rating (shadowing), or nothing. */
+  review?: 'full' | 'compact' | 'none'
   onSaved?: (r: RecordingRow) => void
   onDeleted?: (id: string) => void
 }) {
@@ -87,6 +94,7 @@ export function Recorder({
         blob: out.blob,
         mimeType: out.mimeType,
         durationSec: Math.round(out.durationSec * 10) / 10,
+        round,
         createdAt: Date.now(),
       }
       await db.recordings.add(row)
@@ -166,6 +174,7 @@ export function Recorder({
           </Button>
         </div>
       )}
+      {state === 'saved' && saved && review !== 'none' && <RecordingReview recording={saved} compact={review === 'compact'} />}
       {error && <Notice tone="danger">{error}</Notice>}
     </div>
   )

@@ -15,7 +15,6 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: false,
-      includeAssets: ['icons/*.png', 'icons/*.svg', 'splash/*.png', 'audio/**/*'],
       manifest: {
         name: 'Parlons',
         short_name: 'Parlons',

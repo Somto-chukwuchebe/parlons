@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { ChevronLeft, ChevronRight, Dices, Phone, Repeat, Snail, Volume2 } from 'lucide-react'
+import { useMemo, useState, type ReactNode } from 'react'
+import { Link } from 'react-router'
+import { ChevronLeft, ChevronRight, Dices, Phone, Volume2 } from 'lucide-react'
 import { useApp } from '../../app/AppContext'
 import { db, newId, type RecordingRow } from '../../db/schema'
-import { speak, stopSpeaking } from '../../lib/tts'
+import { speak } from '../../lib/tts'
+import { shadowClips } from '../../lib/audio'
+import { ShadowPlayer, sourceId, type ShadowSource } from '../ShadowPlayer'
 import type { PromptSeed, WeekSeed } from '../../packs/types'
 import { Recorder } from '../Recorder'
 import { Button, Card, cx, Eyebrow, Notice, Segmented, TextArea, TextInput, TL } from '../ui'
@@ -80,98 +83,46 @@ export function StructureStage({ week, lessonLog, onLessonLog }: { week: WeekSee
 // Shadowing --------------------------------------------------------------------
 
 export function ShadowingStage({ week, onRep }: { week: WeekSeed; onRep: () => void }) {
-  const { pack, settings } = useApp()
-  const say = useSpeaker()
-  const drill = pack.drills[(week.week - 1) % pack.drills.length]
-  const lines = useMemo(
+  const { pack } = useApp()
+  // Native clips first; the device voice reads the model sentences as extra material.
+  const sources: ShadowSource[] = useMemo(
     () => [
-      ...week.models.map((m) => ({ text: m.target, en: m.en })),
-      ...drill.items.map((d) => ({ text: d.b ? `${d.a}… ${d.b}` : d.a, en: d.en })),
+      ...shadowClips(pack, week.week).map((clip) => ({ kind: 'native' as const, clip })),
+      ...week.models.map((m, i) => ({ kind: 'tts' as const, id: `w${week.week}-m${i}`, text: m.target, en: m.en })),
     ],
-    [week, drill],
+    [pack, week],
   )
   const [i, setI] = useState(0)
-  const [slow, setSlow] = useState(false)
-  const [looping, setLooping] = useState(false)
-  const loopRef = useRef(false)
-  const line = lines[i]
-
-  useEffect(() => () => {
-    loopRef.current = false
-    stopSpeaking()
-  }, [])
-
-  async function loop() {
-    if (looping) {
-      loopRef.current = false
-      setLooping(false)
-      stopSpeaking()
-      return
-    }
-    loopRef.current = true
-    setLooping(true)
-    // Play, then leave a gap about as long as the sentence for you to repeat it. Five rounds.
-    for (let n = 0; n < 5 && loopRef.current; n++) {
-      const t0 = performance.now()
-      await say(line.text, slow ? 0.75 : undefined)
-      onRep()
-      const gap = Math.max(1500, (performance.now() - t0) * 1.3)
-      await new Promise((r) => setTimeout(r, gap))
-    }
-    loopRef.current = false
-    setLooping(false)
-  }
-
-  function go(d: number) {
-    loopRef.current = false
-    setLooping(false)
-    stopSpeaking()
-    setI((n) => (n + d + lines.length) % lines.length)
-  }
+  const source = sources[i]
+  const drill = pack.drills[(week.week - 1) % pack.drills.length]
+  const go = (d: number) => setI((n) => (n + d + sources.length) % sources.length)
 
   return (
     <div className="space-y-5">
-      <Card className="text-center">
-        <Eyebrow>
-          {i < week.models.length ? 'Model sentence' : drill.title} · {i + 1} of {lines.length}
-        </Eyebrow>
-        <p className="mt-4 text-3xl font-black leading-snug">
-          <TL>{line.text}</TL>
-        </p>
-        {settings.showEnglish && line.en && <p className="mt-2 font-semibold text-muted">{line.en}</p>}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Button size="lg" icon={<ChevronLeft size={22} />} onClick={() => go(-1)} aria-label="Previous" />
-          <Button
-            variant="primary"
-            size="lg"
-            icon={<Volume2 size={22} />}
-            onClick={() => {
-              void say(line.text, slow ? 0.75 : undefined)
-              onRep()
-            }}
-          >
-            Listen
-          </Button>
-          <Button variant={looping ? 'rouge' : 'secondary'} size="lg" icon={<Repeat size={22} />} onClick={loop}>
-            {looping ? 'Stop' : 'Loop ×5'}
-          </Button>
-          <Button size="lg" icon={<ChevronRight size={22} />} onClick={() => go(1)} aria-label="Next" />
-        </div>
-        <button
-          onClick={() => setSlow(!slow)}
-          aria-pressed={slow}
-          className={cx('mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-extrabold', slow ? 'bg-accent-soft text-accent' : 'text-muted')}
-        >
-          <Snail size={18} /> Slow (0.75×) {slow ? 'on' : 'off'}
-        </button>
-      </Card>
+      <ShadowPlayer
+        key={sourceId(source)}
+        source={source}
+        onRep={onRep}
+        header={
+          <div className="flex items-center justify-between gap-2">
+            <Button size="sm" icon={<ChevronLeft size={20} />} onClick={() => go(-1)} aria-label="Previous sentence" />
+            <Eyebrow>
+              {i + 1} of {sources.length}
+            </Eyebrow>
+            <Button size="sm" icon={<ChevronRight size={20} />} onClick={() => go(1)} aria-label="Next sentence" />
+          </div>
+        }
+      />
       <Notice>
         <strong>How to shadow:</strong> speak along with the voice, a split second behind it, copying the rhythm and melody
-        rather than individual words. In a loop, repeat in the pause.
+        rather than individual words. Then record yourself and play both.
       </Notice>
       <Card>
-        <p className="font-black">{drill.title}</p>
+        <p className="font-black">This week's sound: {drill.title}</p>
         <p className="text-sm font-semibold text-muted">{drill.explain}</p>
+        <Link to="/shadowing" className="mt-2 inline-block text-sm font-extrabold text-accent underline">
+          Practise it in Pronunciation drills
+        </Link>
       </Card>
     </div>
   )
@@ -317,7 +268,7 @@ function CallForm({ onLogged }: { onLogged: (minutes: number) => void }) {
   )
 }
 
-function SelfTalk({ onRecorded }: { onRecorded: (r: RecordingRow) => void }) {
+export function SelfTalk({ onRecorded }: { onRecorded: (r: RecordingRow) => void }) {
   const { pack } = useApp()
   const [i, setI] = useState(() => Math.floor(Math.random() * pack.selfTalkPrompts.length))
   const prompt = pack.selfTalkPrompts[i]

@@ -56,8 +56,15 @@ features beyond it without asking; suggest them at the end of a phase.
   (`lib/recorder.ts`, `components/Recorder.tsx`), end-of-session summary ("What you did").
 - Decisions: no XP/levels (owner wants focus on real learning, not a Duolingo clone). Keep streak,
   minutes ring, can-do goals, metro line, celebrations + factual summary.
-- Next: Phase 3 — recorder self-ratings and mistake tagging, Then and now, full shadowing player with
-  open-licence native audio, pronunciation check.
+- Phase 3 done: recording self-review + mistake tagging → error cards (`components/RecordingReview.tsx`),
+  Speak hub + recordings list, Then and now (`routes/ThenAndNow.tsx`, rounds 1/4/8/12 + weekly snapshot),
+  shadowing player with A-B loop/speed/record/play-both (`components/ShadowPlayer.tsx`), imported clips,
+  pronunciation check via Web Speech (`lib/speech.ts`, approximate, hidden when unsupported),
+  native audio from Tatoeba (`scripts/build-audio.mjs` → `public/audio/fr/*.mp3` + `src/packs/fr/audio.json`;
+  only CC BY-SA 4.0 / CC BY-NC 4.0; credits on /about). Review cards use native audio when the text matches.
+- Speaking totals = recording durations + logged call minutes (`lib/stats.ts`), not stage time.
+- Next: Phase 4 — conversation log, mistake journal, AI prompt builder + paste-back, self-talk, direct voice mode
+  (explain privacy/cost/security first and get a yes before building).
 
 ## Agreed decisions (from chat with the owner)
 - Logo: option D4 (navy tile, red stem, white speech-bubble "p"). Palette as in `src/index.css`.

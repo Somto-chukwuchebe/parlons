@@ -213,6 +213,9 @@ export function Settings() {
           <LinkButton to="/install" icon={<Download size={18} />}>
             How to install on this device
           </LinkButton>
+          <LinkButton to="/about" variant="ghost">
+            About and credits
+          </LinkButton>
         </Card>
       </div>
     </div>

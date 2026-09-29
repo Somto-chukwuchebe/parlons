@@ -5,6 +5,7 @@ import type { CardRow } from '../db/schema'
 import { parseCloze } from '../packs/helpers'
 import { buildQueue, gradeCard, intervalLabel, type GradeName } from '../lib/srs'
 import { speak } from '../lib/tts'
+import { clipUrl, nativeClipFor, playUrl } from '../lib/audio'
 import { Button, cx, Eyebrow, TL } from './ui'
 
 // Speak-first review: prompt → say it out loud → reveal (auto-plays audio) → grade.
@@ -35,9 +36,15 @@ export function ReviewDeck({ cap, onProgress }: { cap: number; onProgress?: (r: 
   }, [lang, cap])
 
   const card = queue?.[i]
+  // Native recording when the phrase has one (and wasn't edited); otherwise the device voice.
+  const native = card && card.kind === 'phrase' ? nativeClipFor(pack, card.seedId) : undefined
+  const nativeOk = native && card && native.text.replace(/[’]/g, "'") === card.target.replace(/[’]/g, "'")
   const say = useCallback(
-    (text: string) => speak(text, { locale: pack.speech.locale, voiceURI: profile?.voiceURI, rate: profile?.ttsRate }),
-    [pack, profile],
+    (text: string) =>
+      nativeOk && native
+        ? playUrl(clipUrl(pack.code, native.id))
+        : speak(text, { locale: pack.speech.locale, voiceURI: profile?.voiceURI, rate: profile?.ttsRate }),
+    [pack, profile, native, nativeOk],
   )
   const fullText = card ? card.target.replace(/\[\[(.+?)\]\]/g, '$1') : ''
 
@@ -151,6 +158,11 @@ export function ReviewDeck({ cap, onProgress }: { cap: number; onProgress?: (r: 
               </span>
               <TL className="text-2xl font-black text-accent sm:text-3xl">{fullText}</TL>
             </button>
+            {nativeOk && native && (
+              <p className="text-xs font-extrabold text-good">
+                Native speaker · {native.speaker}
+              </p>
+            )}
             {card.kind !== 'phrase' && !settings.showEnglish && <p className="font-semibold text-muted">{card.en}</p>}
             {card.note && (
               <p className="mx-auto flex max-w-md items-start justify-center gap-1.5 text-sm font-semibold text-muted">

@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
-import { Download, House, Layers, Plus, Settings, TrainFront } from 'lucide-react'
+import { Download, House, Layers, Mic, Plus, Settings, TrainFront } from 'lucide-react'
 import { QuickAddDialog } from '../components/QuickAdd'
 import { UpdatePrompt } from '../components/UpdatePrompt'
 import { OfflineBadge } from '../components/OfflineBadge'
@@ -18,6 +18,7 @@ interface Item {
 const items: Item[] = [
   { to: '/', label: 'Today', icon: <House size={24} strokeWidth={2.4} /> },
   { to: '/phrases', label: 'Phrases', icon: <Layers size={24} strokeWidth={2.4} /> },
+  { to: '/speak', label: 'Speak', icon: <Mic size={24} strokeWidth={2.4} /> },
   { to: '/course', label: 'Course', icon: <TrainFront size={24} strokeWidth={2.4} /> },
   { to: '/settings', label: 'Settings', icon: <Settings size={24} strokeWidth={2.4} /> },
 ]
@@ -92,19 +93,19 @@ export function Layout() {
 
       {/* Bottom tab bar: phones */}
       <nav aria-label="Main" className="safe-bottom safe-x fixed inset-x-0 bottom-0 z-40 border-t-2 border-line bg-surface/95 backdrop-blur md:hidden">
-        <ul className="grid grid-cols-4">
+        <ul className="grid grid-cols-5">
           {items.map((i) => (
             <li key={i.to}>
               <NavLink
                 to={i.to}
                 end={i.to === '/'}
                 className={({ isActive }) =>
-                  cx('flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-extrabold', isActive ? 'text-accent' : 'text-muted')
+                  cx('flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-extrabold', isActive ? 'text-accent' : 'text-muted')
                 }
               >
                 {({ isActive }) => (
                   <>
-                    <span className={cx('grid h-8 w-14 place-items-center rounded-full transition-colors', isActive && 'bg-accent-soft')}>
+                    <span className={cx('grid h-8 w-12 place-items-center rounded-full transition-colors', isActive && 'bg-accent-soft')}>
                       {i.icon}
                     </span>
                     {i.label}

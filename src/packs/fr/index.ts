@@ -17,6 +17,7 @@ import {
 import rolePlay from './ai/role-play.md?raw'
 import weeklyReview from './ai/weekly-review.md?raw'
 import voiceSystem from './ai/voice-system.md?raw'
+import audio from './audio.json'
 
 const fr: LanguagePack = {
   code: 'fr',
@@ -38,6 +39,7 @@ const fr: LanguagePack = {
   scenarios,
   mistakeCategories,
   reviewFlags,
+  audio: { source: audio.source, clips: audio.clips },
   aiTemplates: { rolePlay, weeklyReview, voiceSystem },
   typography: frenchTypography,
 }

@@ -12,11 +12,14 @@ import { contentWeek, fromDayKey, isReviewDay, phaseOn } from '../lib/program'
 import { currentStreak, totalsByDay } from '../lib/streak'
 import { ensureDeck, queueStats, type QueueStats } from '../lib/srs'
 import { formatDuration, isResumable, STAGE_INFO } from '../lib/session'
+import { speakingSeconds } from '../lib/stats'
 
 export function Today() {
   const { pack, plan, today, profile, settings, lang } = useApp()
   const sessions = useLiveQuery(() => db.sessions.where('lang').equals(lang).toArray(), [lang], [])
   const canDo = useLiveQuery(() => db.canDo.where('lang').equals(lang).toArray(), [lang], [])
+  const recordings = useLiveQuery(() => db.recordings.where('lang').equals(lang).toArray(), [lang], [])
+  const conversations = useLiveQuery(() => db.conversations.where('lang').equals(lang).toArray(), [lang], [])
   const [mode, setMode] = useState<SessionMode>(profile?.dailyMinutes ?? 30)
   const [stats, setStats] = useState<QueueStats | null>(null)
   const navigate = useNavigate()
@@ -39,7 +42,6 @@ export function Today() {
   const minutesToday = Math.round((totals.get(today) ?? 0) / 60)
   const target = profile.dailyMinutes
   const daysStudied = [...totals.values()].filter((s) => s >= 600).length
-  const spokenMin = Math.round(sessions.reduce((n, s) => n + s.spokenSec, 0) / 60)
   const ticked = new Set(canDo.filter((c) => c.week === weekNo).map((c) => c.index))
   const resumable = sessions
     .filter((s) => isResumable(s, today))
@@ -198,7 +200,7 @@ export function Today() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatPill icon={<Layers size={22} />} value={stats ? stats.dueReviews + stats.newAvailable : '–'} label="Phrases for today" />
-        <StatPill icon={<Mic size={22} />} value={`${spokenMin} min`} label="Spoken so far" tone="rouge" />
+        <StatPill icon={<Mic size={22} />} value={formatDuration(speakingSeconds(recordings, conversations))} label="Spoken on record" tone="rouge" />
         <StatPill icon={<CalendarCheck size={22} />} value={daysStudied} label="Days studied" tone="good" />
         <StatPill icon={<Award size={22} />} value={canDo.length} label="Goals earned" tone="gold" />
       </div>
