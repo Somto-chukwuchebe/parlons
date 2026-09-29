@@ -38,3 +38,12 @@ features beyond it without asking; suggest them at the end of a phase.
 ## Status
 - Phase 1 (foundation) done: PWA/install page, French pack, Dexie schema, seed review, backup, onboarding.
 - Next: Phase 2 — Today screen, guided session player, FSRS phrase bank (`ts-fsrs`).
+
+## Agreed decisions (from chat with the owner)
+- Logo: option D4 (navy tile, red stem, white speech-bubble "p"). Palette as in `src/index.css`.
+- Start date 1 Oct 2026; programme is 90 days from the chosen start date.
+- Streak: any session ≥10 min counts; the day ends at local midnight.
+- Shadowing audio (Phase 3): owner wants natural native-speaker audio from open-licence sources
+  (candidates: Tatoeba, Mozilla Common Voice, Lingua Libre). Verify each licence, bundle clips
+  for offline use, credit them on an About page, and fall back to TTS where no clip exists.
+- Interface English only for now (no Russian notes).
