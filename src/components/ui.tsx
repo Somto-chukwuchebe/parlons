@@ -2,8 +2,8 @@ import {
   forwardRef,
   useId,
   type ButtonHTMLAttributes,
+  type ComponentProps,
   type CSSProperties,
-  type InputHTMLAttributes,
   type ReactNode,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
@@ -32,17 +32,22 @@ const variants: Record<Variant, { cls: string; lip?: string }> = {
 }
 
 const sizes: Record<Size, string> = {
-  sm: 'min-h-10 px-3 text-sm rounded-xl',
-  md: 'min-h-12 px-5 rounded-2xl',
-  lg: 'min-h-14 px-6 text-lg rounded-2xl',
-  xl: 'min-h-16 px-8 text-xl rounded-3xl',
+  sm: 'min-h-10 text-sm rounded-xl',
+  md: 'min-h-12 rounded-2xl',
+  lg: 'min-h-14 text-lg rounded-2xl',
+  xl: 'min-h-16 text-xl rounded-3xl',
 }
+const padding: Record<Size, string> = { sm: 'px-3', md: 'px-5', lg: 'px-6', xl: 'px-8' }
+const square: Record<Size, string> = { sm: 'w-10', md: 'w-12', lg: 'w-14', xl: 'w-16' }
 
-export function buttonClasses(variant: Variant = 'secondary', size: Size = 'md', className?: string) {
+/** Pass `iconOnly` for square icon buttons; a `px-…` in className replaces the default padding. */
+export function buttonClasses(variant: Variant = 'secondary', size: Size = 'md', className?: string, iconOnly = false) {
+  const customPadding = /(^|\s)(sm:)?px-/.test(className ?? '')
   return cx(
     'inline-flex select-none items-center justify-center gap-2 whitespace-nowrap font-extrabold tracking-tight disabled:pointer-events-none disabled:opacity-45',
     variant !== 'ghost' && 'press',
     sizes[size],
+    iconOnly ? `${square[size]} shrink-0` : !customPadding && padding[size],
     variants[variant].cls,
     className,
   )
@@ -56,7 +61,7 @@ export const Button = forwardRef<
   ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size; icon?: ReactNode }
 >(function Button({ variant = 'secondary', size = 'md', icon, className, children, type = 'button', style, ...rest }, ref) {
   return (
-    <button ref={ref} type={type} className={buttonClasses(variant, size, className)} style={{ ...lipStyle(variant), ...style }} {...rest}>
+    <button ref={ref} type={type} className={buttonClasses(variant, size, className, !children)} style={{ ...lipStyle(variant), ...style }} {...rest}>
       {icon}
       {children}
     </button>
@@ -212,7 +217,7 @@ export function Field({ label, hint, children, htmlFor }: { label: ReactNode; hi
   )
 }
 
-export function TextInput({ label, hint, className, ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: ReactNode; hint?: ReactNode }) {
+export function TextInput({ label, hint, className, ...rest }: ComponentProps<'input'> & { label: ReactNode; hint?: ReactNode }) {
   const id = useId()
   return (
     <Field label={label} hint={hint} htmlFor={id}>

@@ -80,17 +80,33 @@ Each device keeps its own data, with no cloud sync. Backups are how you protect 
   - **Replace:** wipes this device and restores the backup exactly.
 - The Today screen reminds you if your last backup is more than a week old.
 
-## 5. Reviewing and editing the course
+## 5. Your daily session
+
+On **Today**, pick 10, 30, 45 or 60 minutes and tap **Start session**. The app walks you through the stages:
+
+- **Review:** see the English, **say the French out loud**, then tap *Show answer* to hear it and grade yourself (Again / Hard / Good / Easy). On a laptop: Space reveals, keys 1–4 grade.
+- **Structure:** this week's grammar pattern, with model sentences to listen to and repeat. You can note an outside lesson, e.g. a Language Transfer track.
+- **Shadowing:** speak along with the voice; *Loop ×5* leaves a pause after each play for you to repeat.
+- **Speak:** answer prompts out loud; tap the red button to record, then listen back.
+- **Conversation** (45 and 60 min): log a real call, or do a 60-second self-talk.
+
+Skip or add 2 minutes to any stage; a soft chime tells you when a stage's time is up. At the end you'll see exactly what you did. Any day with 10+ minutes keeps your streak.
+
+The **10-minute** option is review plus speaking, for busy days.
+
+Missed a few days? Reviews are capped per session, so there is never a mountain waiting; the rest are rescheduled.
+
+## 6. Reviewing and editing the course
 
 The whole 12-week French course is in `docs/seed-review-fr.md` (readable on GitHub). In the app, open the **Course** tab: tap **Edit** on any phrase to fix or hide it. Items marked ⚑ are ones worth double-checking.
 
 To change the course for everyone, edit the files in `src/packs/fr/`, then run `npm run seed-doc`.
 
-## 6. Optional AI voice mode
+## 7. Optional AI voice mode
 
 Not built yet (Phase 4). Before it's built, you'll get a plain-language explanation of the privacy, cost and security trade-offs.
 
-## 7. How the 90-day programme is laid out
+## 8. How the 90-day programme is laid out
 
 - The programme runs for 90 days from your start date.
 - Weekly reviews are always on Sunday, so weeks 2–12 run Monday to Sunday.

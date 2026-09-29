@@ -56,6 +56,8 @@ export interface CardRow {
   source: CardSource
   /** Audio: 'tts' (default), or a recording/clip id. */
   audioRef?: string
+  /** Introduction order for new cards (lower first). Learner-made cards use -1 to jump the queue. */
+  order?: number
   fsrs: FsrsCard
   due: number // copy of fsrs.due as ms, indexed
   suspended?: boolean

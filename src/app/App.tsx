@@ -8,6 +8,9 @@ import { Course } from '../routes/Course'
 import { Settings } from '../routes/Settings'
 import { Install } from '../routes/Install'
 import { ErrorPage } from '../routes/ErrorPage'
+import { Session } from '../routes/Session'
+import { Phrases } from '../routes/Phrases'
+import { Review } from '../routes/Review'
 
 // Hash-based URLs (…/#/course) so deep links work on GitHub Pages and offline.
 
@@ -23,6 +26,15 @@ const router = createHashRouter([
   { path: '/welcome', element: <Onboarding />, errorElement: <ErrorPage /> },
   { path: '/install', element: <Install />, errorElement: <ErrorPage /> },
   {
+    path: '/session',
+    errorElement: <ErrorPage />,
+    element: (
+      <RequireProfile>
+        <Session />
+      </RequireProfile>
+    ),
+  },
+  {
     errorElement: <ErrorPage />,
     element: (
       <RequireProfile>
@@ -31,6 +43,8 @@ const router = createHashRouter([
     ),
     children: [
       { path: '/', element: <Today /> },
+      { path: '/phrases', element: <Phrases /> },
+      { path: '/review', element: <Review /> },
       { path: '/course', element: <Course /> },
       { path: '/settings', element: <Settings /> },
     ],

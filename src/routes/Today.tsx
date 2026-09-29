@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { format } from 'date-fns'
 import { Award, CalendarCheck, ChevronRight, Layers, Mic, Play, ShieldAlert, Sparkles } from 'lucide-react'
@@ -10,12 +10,24 @@ import { APP_NAME, BACKUP_REMINDER_DAYS, CURRICULUM_WEEKS, PROGRAM_DAYS } from '
 import { db, type SessionMode } from '../db/schema'
 import { contentWeek, fromDayKey, isReviewDay, phaseOn } from '../lib/program'
 import { currentStreak, totalsByDay } from '../lib/streak'
+import { ensureDeck, queueStats, type QueueStats } from '../lib/srs'
 
 export function Today() {
   const { pack, plan, today, profile, settings, lang } = useApp()
   const sessions = useLiveQuery(() => db.sessions.where('lang').equals(lang).toArray(), [lang], [])
   const canDo = useLiveQuery(() => db.canDo.where('lang').equals(lang).toArray(), [lang], [])
   const [mode, setMode] = useState<SessionMode>(profile?.dailyMinutes ?? 30)
+  const [stats, setStats] = useState<QueueStats | null>(null)
+  const navigate = useNavigate()
+  const approved = !!profile?.seedApprovedAt
+  const deckWeek = plan ? contentWeek(plan, today) : 1
+  // Keep the deck in step with the course, then count what's due. Re-count when cards change.
+  const cardCount = useLiveQuery(() => db.cards.where('lang').equals(lang).count(), [lang], 0)
+  const reviewCount = useLiveQuery(() => db.reviewLogs.where('lang').equals(lang).count(), [lang], 0)
+  useEffect(() => {
+    if (!approved) return
+    void ensureDeck(pack, deckWeek).then(() => queueStats(lang).then(setStats))
+  }, [approved, pack, deckWeek, lang, cardCount, reviewCount])
   if (!plan || !profile) return null
 
   const phase = phaseOn(plan, today)
@@ -93,10 +105,23 @@ export function Today() {
                   { value: 60, label: '60 min' },
                 ]}
               />
-              <Button variant="primary" size="xl" className="w-full" icon={<Play size={24} fill="currentColor" />} disabled>
-                Start session
+              <Button
+                variant="primary"
+                size="xl"
+                className="w-full"
+                icon={<Play size={24} fill="currentColor" />}
+                disabled={!approved}
+                onClick={() => navigate(`/session?mode=${mode}`)}
+              >
+                {minutesToday > 0 ? 'Start another session' : 'Start session'}
               </Button>
-              <p className="text-center text-xs font-bold text-muted">Sessions arrive in the next build.</p>
+              <p className="text-center text-xs font-bold text-muted">
+                {!approved
+                  ? 'Approve your course to start.'
+                  : mode === 10
+                    ? 'Short on time: review + speak. Still counts for your streak.'
+                    : `${mode} minutes, ${mode === 30 ? 'four' : 'five'} stages. Skip or extend any of them.`}
+              </p>
             </div>
           </div>
         </Card>
@@ -139,7 +164,7 @@ export function Today() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatPill icon={<Layers size={22} />} value={0} label="Phrases due" />
+        <StatPill icon={<Layers size={22} />} value={stats ? stats.dueReviews + stats.newAvailable : '–'} label="Phrases for today" />
         <StatPill icon={<Mic size={22} />} value={`${spokenMin} min`} label="Spoken so far" tone="rouge" />
         <StatPill icon={<CalendarCheck size={22} />} value={daysStudied} label="Days studied" tone="good" />
         <StatPill icon={<Award size={22} />} value={canDo.length} label="Goals earned" tone="gold" />

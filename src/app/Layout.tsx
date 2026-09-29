@@ -1,6 +1,7 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
-import { Download, House, Settings, TrainFront } from 'lucide-react'
+import { Download, House, Layers, Plus, Settings, TrainFront } from 'lucide-react'
+import { QuickAddDialog } from '../components/QuickAdd'
 import { UpdatePrompt } from '../components/UpdatePrompt'
 import { OfflineBadge } from '../components/OfflineBadge'
 import { Logo } from '../components/Logo'
@@ -16,6 +17,7 @@ interface Item {
 
 const items: Item[] = [
   { to: '/', label: 'Today', icon: <House size={24} strokeWidth={2.4} /> },
+  { to: '/phrases', label: 'Phrases', icon: <Layers size={24} strokeWidth={2.4} /> },
   { to: '/course', label: 'Course', icon: <TrainFront size={24} strokeWidth={2.4} /> },
   { to: '/settings', label: 'Settings', icon: <Settings size={24} strokeWidth={2.4} /> },
 ]
@@ -23,6 +25,7 @@ const items: Item[] = [
 export function Layout() {
   const { pathname } = useLocation()
   const { pack } = useApp()
+  const [adding, setAdding] = useState(false)
   // Each page opens at the top.
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -53,6 +56,15 @@ export function Layout() {
             </li>
           ))}
         </ul>
+        <div className="px-4 pt-6">
+          <button
+            onClick={() => setAdding(true)}
+            className="press flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-line bg-surface font-extrabold"
+            style={{ '--lip': 'var(--line)' } as CSSProperties}
+          >
+            <Plus size={20} strokeWidth={2.6} /> Add a phrase
+          </button>
+        </div>
         <div className="mt-auto px-4 pb-6">
           <SideLink to="/install" label="Install app" icon={<Download size={22} strokeWidth={2.4} />} />
         </div>
@@ -67,9 +79,20 @@ export function Layout() {
 
       <UpdatePrompt />
 
+      {/* Quick add (phones) */}
+      <button
+        onClick={() => setAdding(true)}
+        aria-label="Add a phrase"
+        className="press fixed right-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 grid h-14 w-14 place-items-center rounded-2xl bg-accent text-on-accent md:hidden"
+        style={{ '--lip': 'color-mix(in oklab, var(--accent) 62%, black)' } as CSSProperties}
+      >
+        <Plus size={28} strokeWidth={2.8} />
+      </button>
+      {adding && <QuickAddDialog onClose={() => setAdding(false)} />}
+
       {/* Bottom tab bar: phones */}
       <nav aria-label="Main" className="safe-bottom safe-x fixed inset-x-0 bottom-0 z-40 border-t-2 border-line bg-surface/95 backdrop-blur md:hidden">
-        <ul className="grid grid-cols-3">
+        <ul className="grid grid-cols-4">
           {items.map((i) => (
             <li key={i.to}>
               <NavLink

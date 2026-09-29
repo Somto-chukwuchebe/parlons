@@ -22,6 +22,8 @@ features beyond it without asking; suggest them at the end of a phase.
   released `version(n)`; add `version(n+1)` with `.upgrade()`.** Add new tables to `TABLES` so backup covers them.
 - `src/lib/program.ts` — 90-day calendar. Week 1 is short (start Tue–Wed) or long (start Thu–Sun) so
   weeks 2–12 run Mon–Sun and weekly reviews fall on Sundays. Leftover days = "final stretch".
+- `src/lib/srs.ts` — cards appear as their week arrives (`ensureDeck`), ≤10 new/day, sessions capped
+  (`REVIEW_CAP`); `order` field sets introduction order (learner cards first, clozes after their week).
 - `src/lib/backup.ts` — zip export/import (fflate): `backup.json` with `$date`/`$blob` markers + `audio/*`.
 - `src/app/` — providers, router (hash router for GitHub Pages), layout. `src/routes/` — screens.
 - Seed edits by the learner live in `seedOverrides` (the pack stays untouched); `lib/seed.ts` merges them.
@@ -49,7 +51,13 @@ features beyond it without asking; suggest them at the end of a phase.
 ## Status
 - Phase 1 (foundation) done: PWA/install page, French pack, Dexie schema, seed review, backup, onboarding.
 - Design pass done (own identity, desktop sidebar layout, streak logic in `lib/streak.ts`).
-- Next: Phase 2 — session player, FSRS phrase bank (`ts-fsrs`), wire up Today's Start button.
+- Phase 2 done: guided session player (`routes/Session.tsx`, pure logic in `lib/session.ts`), speak-first
+  FSRS review (`lib/srs.ts`, `components/ReviewDeck.tsx`), phrase bank + quick add, basic recorder
+  (`lib/recorder.ts`, `components/Recorder.tsx`), end-of-session summary ("What you did").
+- Decisions: no XP/levels (owner wants focus on real learning, not a Duolingo clone). Keep streak,
+  minutes ring, can-do goals, metro line, celebrations + factual summary.
+- Next: Phase 3 — recorder self-ratings and mistake tagging, Then and now, full shadowing player with
+  open-licence native audio, pronunciation check.
 
 ## Agreed decisions (from chat with the owner)
 - Logo: option D4 (navy tile, red stem, white speech-bubble "p"). Palette as in `src/index.css`.
