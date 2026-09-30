@@ -15,6 +15,9 @@ import { Speak } from '../routes/Speak'
 import { Shadowing } from '../routes/Shadowing'
 import { ThenAndNow } from '../routes/ThenAndNow'
 import { About } from '../routes/About'
+import { Conversations } from '../routes/Conversations'
+import { Mistakes } from '../routes/Mistakes'
+import { RolePlay } from '../routes/RolePlay'
 
 // Hash-based URLs (…/#/course) so deep links work on GitHub Pages and offline.
 
@@ -53,6 +56,9 @@ const router = createHashRouter([
       { path: '/shadowing', element: <Shadowing /> },
       { path: '/then-and-now', element: <ThenAndNow /> },
       { path: '/about', element: <About /> },
+      { path: '/conversations', element: <Conversations /> },
+      { path: '/mistakes', element: <Mistakes /> },
+      { path: '/roleplay', element: <RolePlay /> },
       { path: '/course', element: <Course /> },
       { path: '/settings', element: <Settings /> },
     ],

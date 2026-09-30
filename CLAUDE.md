@@ -63,8 +63,13 @@ features beyond it without asking; suggest them at the end of a phase.
   native audio from Tatoeba (`scripts/build-audio.mjs` → `public/audio/fr/*.mp3` + `src/packs/fr/audio.json`;
   only CC BY-SA 4.0 / CC BY-NC 4.0; credits on /about). Review cards use native audio when the text matches.
 - Speaking totals = recording durations + logged call minutes (`lib/stats.ts`), not stage time.
-- Next: Phase 4 — conversation log, mistake journal, AI prompt builder + paste-back, self-talk, direct voice mode
-  (explain privacy/cost/security first and get a yes before building).
+- Phase 4 (prompt-builder part) done: conversation log (`components/ConversationForm.tsx`, `routes/Conversations.tsx`),
+  mistake journal with recurrence → extra error cards and 2-week trends (`lib/mistakes.ts`, `routes/Mistakes.tsx`),
+  AI role-play prompt builder + paste-back with Zod validation and a review step (`lib/aiReport.ts`,
+  `lib/template.ts`, `routes/RolePlay.tsx`; templates in `src/packs/fr/ai/*.md`). Session Conversation stage offers
+  call / AI role-play / self-talk.
+- Pending: direct AI voice mode (16b). Owner must first read the privacy/cost/security explanation and say yes.
+- Next: Phase 5 — progress dashboard, weekly review, final fluency check, .ics reminders.
 
 ## Agreed decisions (from chat with the owner)
 - Logo: option D4 (navy tile, red stem, white speech-bubble "p"). Palette as in `src/index.css`.

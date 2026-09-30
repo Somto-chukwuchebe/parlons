@@ -118,9 +118,9 @@ export function PageHeader({
 }) {
   return (
     <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 items-start gap-2">
         {back && (
-          <Link to={back} className="-ml-2 rounded-xl p-2 text-accent hover:bg-accent-soft" aria-label="Back">
+          <Link to={back} className="-ml-2 mt-0.5 rounded-xl p-2 text-accent hover:bg-accent-soft sm:mt-1.5" aria-label="Back">
             <ArrowLeft size={24} />
           </Link>
         )}

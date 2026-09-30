@@ -2,7 +2,7 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { format } from 'date-fns'
-import { ChevronRight, History, Mic, Pause, Play, Star, Trash2, Waves } from 'lucide-react'
+import { Bot, ChevronRight, Flag, History, Mic, Pause, Phone, Play, Star, Trash2, Waves } from 'lucide-react'
 import { useApp } from '../app/AppContext'
 import { Button, Card, cx, Eyebrow, PageHeader, Segmented, StatPill, TL } from '../components/ui'
 import { SelfTalk } from '../components/session/Stages'
@@ -57,6 +57,9 @@ export function Speak() {
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <HubLink to="/shadowing" icon={<Waves size={26} />} title="Shadowing" text="Native speakers, A-B loops, record and compare." />
         <HubLink to="/then-and-now" icon={<History size={26} />} title="Then and now" text="Weeks 1, 4, 8 and 12, side by side." />
+        <HubLink to="/roleplay" icon={<Bot size={26} />} title="AI role-play" text="Real situations with any AI chat, feedback into cards." />
+        <HubLink to="/conversations" icon={<Phone size={26} />} title="Conversations" text="Log tutor and exchange calls, new words, confidence." />
+        <HubLink to="/mistakes" icon={<Flag size={26} />} title="Mistake journal" text="What trips you up, and whether it's improving." />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">

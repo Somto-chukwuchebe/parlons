@@ -108,17 +108,24 @@ Missed a few days? Reviews are capped per session, so there is never a mountain 
 
 The native audio comes from [Tatoeba](https://tatoeba.org), used under each speaker's Creative Commons licence (CC BY-SA 4.0 or CC BY-NC 4.0); see **Settings → About and credits**. To change the clips, edit `src/packs/fr/audio-picks.json` and run `npm run audio`.
 
-## 7. Reviewing and editing the course
+## 7. Conversations, mistakes and AI role-play (also on the Speak tab)
+
+- **Conversations:** log each tutor or language-exchange call: date, partner, minutes, topics and how confident you felt. Add new words as you go; one tap on **Add to phrases** turns each into a card. Add the mistakes you made, too.
+- **Mistake journal:** your mistakes grouped by type (gender and agreement, verb forms, tense choice, prepositions, word order, pronunciation, vocabulary). Each type shows whether it's going up or down over the last two weeks. **Recurring** mistakes (the same correction logged again) automatically get an extra "fix it" card.
+- **AI role-play:** pick a scenario and a correction style (*Flow*: corrections at the end; *Coach*: after every turn). Tap **Copy prompt** (or **Share to an app** on iPhone) and paste it into any AI chat assistant. Have the conversation; type *help* for a hint and *fin* to finish. Copy the AI's final reply, including the ```json block, and paste it back into Parlons. You'll see its mistakes and useful phrases, can edit or untick any of them, then save: mistakes go to your journal as "fix it" cards and phrases go to your bank. If the reply can't be read, fill the same form in by hand.
+- **Self-talk:** a random everyday prompt with a 60-second recording, on the Speak tab and in the session's Conversation stage.
+
+## 8. Reviewing and editing the course
 
 The whole 12-week French course is in `docs/seed-review-fr.md` (readable on GitHub). In the app, open the **Course** tab: tap **Edit** on any phrase to fix or hide it. Items marked ⚑ are ones worth double-checking.
 
 To change the course for everyone, edit the files in `src/packs/fr/`, then run `npm run seed-doc`.
 
-## 8. Optional AI voice mode
+## 9. Optional AI voice mode
 
 Not built yet (Phase 4). Before it's built, you'll get a plain-language explanation of the privacy, cost and security trade-offs.
 
-## 9. How the 90-day programme is laid out
+## 10. How the 90-day programme is laid out
 
 - The programme runs for 90 days from your start date.
 - Weekly reviews are always on Sunday, so weeks 2–12 run Monday to Sunday.

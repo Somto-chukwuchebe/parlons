@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Check, Flag, PenLine } from 'lucide-react'
 import { useApp } from '../app/AppContext'
-import { db, newId, type RecordingRow } from '../db/schema'
-import { addCard } from '../lib/srs'
+import { db, type RecordingRow } from '../db/schema'
+import { saveMistake } from '../lib/mistakes'
 import { wordsPerMinute } from '../lib/speech'
 import { storageErrorMessage } from '../lib/storage'
 import { Button, cx, Eyebrow, Notice, Select, TextArea, TextInput, TL } from './ui'
@@ -138,7 +138,7 @@ export function MistakeForm({
 }: {
   recordingId?: string
   day: string
-  source?: 'recording' | 'conversation' | 'manual'
+  source?: 'recording' | 'conversation' | 'ai' | 'manual'
   onDone: () => void
 }) {
   const { pack, lang } = useApp()
@@ -148,30 +148,13 @@ export function MistakeForm({
   const [explanation, setExplanation] = useState('')
   const [makeCard, setMakeCard] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
+  const [saved, setSaved] = useState<false | 'saved' | 'recurring'>(false)
 
   async function save() {
     try {
-      let cardId: string | undefined
-      if (makeCard) {
-        const card = await addCard({ lang, kind: 'error', wrong, target: correct, en: explanation || 'Say the correct version.', source: 'mistake' })
-        cardId = card.id
-      }
-      await db.mistakes.add({
-        id: newId(),
-        lang,
-        day,
-        category,
-        wrong: wrong.trim(),
-        correct: correct.trim(),
-        explanation: explanation.trim() || undefined,
-        source,
-        sourceId: recordingId,
-        cardId,
-        createdAt: Date.now(),
-      })
-      setSaved(true)
-      setTimeout(onDone, 900)
+      const r = await saveMistake({ lang, day, category, wrong, correct, explanation, source, sourceId: recordingId }, makeCard)
+      setSaved(r.recurring ? 'recurring' : 'saved')
+      setTimeout(onDone, r.recurring ? 2200 : 900)
     } catch (e) {
       setError(storageErrorMessage(e))
     }
@@ -179,8 +162,10 @@ export function MistakeForm({
 
   if (saved)
     return (
-      <Notice tone="good" icon={<Check size={18} />}>
-        Saved{makeCard ? ', and added as a "fix it" card' : ''}.
+      <Notice tone={saved === 'recurring' ? 'warn' : 'good'} icon={<Check size={18} />}>
+        {saved === 'recurring'
+          ? 'Saved. You’ve made this one before, so an extra "fix it" card was added to your reviews.'
+          : `Saved${makeCard ? ', and added as a "fix it" card' : ''}.`}
       </Notice>
     )
 

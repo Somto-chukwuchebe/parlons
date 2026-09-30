@@ -1,14 +1,16 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { ChevronLeft, ChevronRight, Dices, Phone, Volume2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Dices, Volume2 } from 'lucide-react'
 import { useApp } from '../../app/AppContext'
-import { db, newId, type RecordingRow } from '../../db/schema'
+import type { RecordingRow } from '../../db/schema'
 import { speak } from '../../lib/tts'
 import { shadowClips } from '../../lib/audio'
 import { ShadowPlayer, sourceId, type ShadowSource } from '../ShadowPlayer'
 import type { PromptSeed, WeekSeed } from '../../packs/types'
 import { Recorder } from '../Recorder'
-import { Button, Card, cx, Eyebrow, Notice, Segmented, TextArea, TextInput, TL } from '../ui'
+import { ConversationForm } from '../ConversationForm'
+import { RolePlay } from '../../routes/RolePlay'
+import { Button, Card, cx, Eyebrow, Notice, Segmented, TextInput, TL } from '../ui'
 
 // Content for each stage of the guided session. Each reports what happened upwards
 // so the end-of-session summary can say exactly what you did.
@@ -174,7 +176,7 @@ function PromptCard({ prompt, n, kind, maxSec, onRecorded, extra }: { prompt: Pr
 // Conversation -------------------------------------------------------------------
 
 export function ConversationStage({ onCallLogged, onRecorded }: { onCallLogged: (minutes: number) => void; onRecorded: (r: RecordingRow) => void }) {
-  const [tab, setTab] = useState<'call' | 'self'>('call')
+  const [tab, setTab] = useState<'call' | 'ai' | 'self'>('call')
   return (
     <div className="space-y-5">
       <Segmented
@@ -183,88 +185,27 @@ export function ConversationStage({ onCallLogged, onRecorded }: { onCallLogged: 
         onChange={setTab}
         options={[
           { value: 'call', label: 'I had a call' },
+          { value: 'ai', label: 'AI role-play' },
           { value: 'self', label: 'Self-talk' },
         ]}
       />
-      {tab === 'call' ? <CallForm onLogged={onCallLogged} /> : <SelfTalk onRecorded={onRecorded} />}
+      {tab === 'call' && (
+        <>
+          <p className="font-semibold text-muted">A real call with a tutor or language partner replaces this stage.</p>
+          <ConversationForm compact onSaved={(c) => onCallLogged(c.durationMin)} />
+        </>
+      )}
+      {tab === 'ai' && (
+        <>
+          <Notice>
+            Copy the prompt, have the conversation in your AI app, then come back and paste the reply. The session timer pauses while you're away; the minutes
+            you enter at the end are logged as speaking time.
+          </Notice>
+          <RolePlay embedded />
+        </>
+      )}
+      {tab === 'self' && <SelfTalk onRecorded={onRecorded} />}
     </div>
-  )
-}
-
-function CallForm({ onLogged }: { onLogged: (minutes: number) => void }) {
-  const { lang, today } = useApp()
-  const [kind, setKind] = useState<'tutor' | 'exchange'>('tutor')
-  const [partner, setPartner] = useState('')
-  const [minutes, setMinutes] = useState(30)
-  const [topics, setTopics] = useState('')
-  const [notes, setNotes] = useState('')
-  const [confidence, setConfidence] = useState(3)
-  const [saved, setSaved] = useState(false)
-
-  async function save() {
-    await db.conversations.add({
-      id: newId(),
-      lang,
-      day: today,
-      kind,
-      partner: partner || undefined,
-      durationMin: minutes,
-      topics: topics || undefined,
-      notes: notes || undefined,
-      confidence,
-      newWords: [],
-      createdAt: Date.now(),
-    })
-    setSaved(true)
-    onLogged(minutes)
-  }
-
-  if (saved)
-    return (
-      <Notice tone="good">
-        Call logged: {minutes} minutes of real conversation. New words and mistakes from calls get their own log in a
-        later update.
-      </Notice>
-    )
-
-  return (
-    <Card className="space-y-4">
-      <p className="font-semibold text-muted">A real call with a tutor or language partner replaces this stage.</p>
-      <Segmented
-        label="Who with"
-        value={kind}
-        onChange={setKind}
-        options={[
-          { value: 'tutor', label: 'Tutor' },
-          { value: 'exchange', label: 'Language exchange' },
-        ]}
-      />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextInput label="Partner (optional)" value={partner} onChange={(e) => setPartner(e.target.value)} />
-        <TextInput label="Minutes" type="number" min={1} max={300} value={minutes} onChange={(e) => setMinutes(Number(e.target.value) || 0)} />
-      </div>
-      <TextInput label="Topics" placeholder="e.g. my weekend, work, films" value={topics} onChange={(e) => setTopics(e.target.value)} />
-      <TextArea label="Notes (optional)" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
-      <div>
-        <p className="mb-2 text-sm font-extrabold">How confident did you feel?</p>
-        <div className="grid grid-cols-5 gap-2" role="radiogroup" aria-label="Confidence">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button
-              key={n}
-              role="radio"
-              aria-checked={confidence === n}
-              onClick={() => setConfidence(n)}
-              className={cx('min-h-12 rounded-2xl text-lg font-black', confidence === n ? 'bg-accent text-on-accent' : 'bg-sunk text-muted')}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
-      </div>
-      <Button variant="primary" size="lg" className="w-full" icon={<Phone size={20} />} onClick={save} disabled={minutes <= 0}>
-        Log the call
-      </Button>
-    </Card>
   )
 }
 
