@@ -46,6 +46,9 @@ features beyond it without asking; suggest them at the end of a phase.
 - Anything external (speech recognition, AI) must fail gracefully and never block a session.
 - No runtime CDNs, web fonts or analytics (must work in Russia without a VPN).
 - Tests that store Blobs in fake-indexeddb need `// @vitest-environment node` (jsdom Blobs don't clone).
+- Service worker: `registerSW` must use `immediate: true` (it's called after `load`; the default waits for
+  `load` and silently never registers). `installUpdate` reloads when nothing is waiting. Test updates on the
+  live site: open → push a version bump → Settings → Check for updates → Update now → version changes.
 - Commit after each phase with a clear message.
 
 ## Status
