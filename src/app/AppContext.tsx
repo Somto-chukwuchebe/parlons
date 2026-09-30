@@ -4,6 +4,7 @@ import { db, DEFAULT_SETTINGS, type AppSettings, type Profile } from '../db/sche
 import { loadPack } from '../packs'
 import type { LanguagePack } from '../packs/types'
 import { applyTheme } from '../lib/theme'
+import { Logo } from '../components/Logo'
 import { buildPlan, toDayKey, type ProgramPlan } from '../lib/program'
 
 interface AppState {
@@ -41,10 +42,16 @@ function useToday() {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const settings = useLiveQuery(() => db.settings.get('app'), [], undefined)
-  const loadedSettings = settings ?? DEFAULT_SETTINGS
+  // useLiveQuery returns undefined while loading, so "not saved" is mapped to null to tell
+  // the two apart. Deciding before the data has loaded sent people to setup on every
+  // start on slower devices (iPhone), even though their profile was saved.
+  const settingsRow = useLiveQuery(async () => (await db.settings.get('app')) ?? null, [])
+  const loadedSettings = settingsRow ?? DEFAULT_SETTINGS
   const lang = loadedSettings.activeLang
-  const profile = useLiveQuery(() => db.profiles.get(lang), [lang])
+  const profileRow = useLiveQuery(async () => ({ lang, row: (await db.profiles.get(lang)) ?? null }), [lang])
+  // Only trust a result for the current language (the query re-runs when it changes).
+  const profileReady = settingsRow !== undefined && profileRow !== undefined && profileRow.lang === lang
+  const profile = profileRow?.row ?? undefined
   const [pack, setPack] = useState<LanguagePack | null>(null)
   const [error, setError] = useState<string | null>(null)
   const today = useToday()
@@ -69,7 +76,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [pack, loadedSettings.theme])
 
   const value = useMemo<AppState | null>(() => {
-    if (!pack) return null
+    if (!pack || !profileReady) return null
     return {
       settings: loadedSettings,
       lang,
@@ -79,7 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       today,
       t: pack.typography,
     }
-  }, [pack, loadedSettings, lang, profile, today])
+  }, [pack, profileReady, loadedSettings, lang, profile, today])
 
   if (error) {
     return (
@@ -88,6 +95,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       </div>
     )
   }
-  if (!value) return <div className="p-6 text-muted">Loading…</div>
+  if (!value)
+    return (
+      <div className="grid min-h-dvh place-items-center bg-navy" role="status" aria-label="Loading">
+        <Logo size={96} className="pop-in" />
+      </div>
+    )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
