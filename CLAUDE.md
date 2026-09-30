@@ -73,6 +73,10 @@ features beyond it without asking; suggest them at the end of a phase.
   Sunday weekly review with can-do ticks and rule-based stage suggestion (`routes/WeeklyReview.tsx`, `lib/weekly.ts`),
   final fluency check with before/after self-assessment (`routes/FluencyCheck.tsx`), calendar reminder (`lib/ics.ts`).
   Phone nav: Today, Phrases, Speak, Progress, More (`routes/More.tsx`); sidebar shows everything.
+- Extras after Phase 5: app-icon badge (`lib/badge.ts`, opt-in in Settings; iOS needs notification permission),
+  resume-shadowing shortcut (`lib/lastShadow.ts`, localStorage), history-aware `BackButton` in `PageHeader`
+  (falls back to the given path), update checks on foreground + hourly and a Settings "Check for updates" (`lib/pwa.ts`),
+  version string `__APP_VERSION__` from vite.config.ts (bump `version` in package.json for notable releases).
 - Chart colours: `--chart-1/2` and `--heat-0..4` in `index.css`, validated with the dataviz palette checker
   (light and dark). Single-series charts where possible; a table view exists for the weekly numbers.
 

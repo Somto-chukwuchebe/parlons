@@ -2,12 +2,12 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { CalendarCheck, ChartLine, Download, House, Layers, Menu, Mic, Plus, Settings, TrainFront, Trophy } from 'lucide-react'
 import { QuickAddDialog } from '../components/QuickAdd'
-import { UpdatePrompt } from '../components/UpdatePrompt'
 import { OfflineBadge } from '../components/OfflineBadge'
 import { Logo } from '../components/Logo'
 import { cx } from '../components/ui'
 import { APP_NAME } from '../config'
 import { useApp } from './AppContext'
+import { useAppBadge } from '../lib/badge'
 
 interface Item {
   to: string
@@ -32,7 +32,8 @@ const MORE_PATHS = ['/more', '/course', '/weekly-review', '/fluency-check', '/se
 
 export function Layout() {
   const { pathname } = useLocation()
-  const { pack } = useApp()
+  const { pack, lang, settings } = useApp()
+  useAppBadge(lang, !!settings.badge)
   const [adding, setAdding] = useState(false)
   // Each page opens at the top.
   useEffect(() => {
@@ -91,7 +92,6 @@ export function Layout() {
         </main>
       </div>
 
-      <UpdatePrompt />
 
       {/* Quick add (phones) */}
       <button

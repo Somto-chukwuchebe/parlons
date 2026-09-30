@@ -56,7 +56,7 @@ The app is a set of static files, so GitHub Pages hosts it for free. You set thi
 4. Open the **Actions** tab and wait for "Deploy to GitHub Pages" to show a green tick (about 1–2 minutes).
 5. Your app is now at `https://YOUR-USERNAME.github.io/parlons/`.
 
-After that, every `git push` publishes a new version automatically. Installed copies show an **Update** banner the next time they're opened online.
+After that, every `git push` publishes a new version automatically. Installed copies check for it whenever they're opened online and show an **Update now** banner. You can also go to **Settings → App version and updates → Check for updates** at any time; the version number there tells you which build you have.
 
 > GitHub Pages is normally reachable from Russia. If it's ever blocked, the installed app keeps working offline; only updates wait.
 
@@ -133,6 +133,8 @@ The native audio comes from [Tatoeba](https://tatoeba.org), used under each spea
   - an optional AI-coach prompt to copy;
   - a reminder to record your weekly snapshot and to back up.
 - **Final fluency check (week 12):** a recorded 10-minute self-test in five parts: introduce yourself, last weekend, plans, an opinion, a short story. Then play your week 1 recording against today's, and redo the day-one self-assessment to compare levels.
+- **Number on the app icon:** Settings → *Number on the app icon* shows how many phrases are waiting today. On iPhone, allow notifications when asked (Apple requires it for icon numbers; Parlons never sends any). The number refreshes whenever you open the app.
+- **Resume shadowing:** Today and the Speak tab show a shortcut back to the last clip you shadowed.
 - **Daily reminder:** Settings → *Add to my calendar* creates a calendar file with a daily study event at your chosen time for all 90 days. On iPhone choose Calendar; it alerts you at the start time. This works without any server.
 
 ## 9. Reviewing and editing the course

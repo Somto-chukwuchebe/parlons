@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import { format } from 'date-fns'
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock, Flag, Mic, Sparkles, Volume2 } from 'lucide-react'
 import { useApp } from '../app/AppContext'
-import { Button, cx, Eyebrow, Notice, Select, TextInput, TL } from '../components/ui'
+import { BackButton, Button, cx, Eyebrow, Notice, Select, TextInput, TL } from '../components/ui'
 import { Logo } from '../components/Logo'
 import { APP_NAME, DEFAULT_START_DATE, PROGRAM_DAYS } from '../config'
 import { db, DEFAULT_SETTINGS, type Profile } from '../db/schema'
@@ -107,6 +107,11 @@ export function Onboarding() {
       <div className="safe-top safe-x safe-bottom flex min-h-dvh flex-col">
         <div className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-5 py-6 sm:py-10 lg:justify-center">
           {/* Phone header + progress */}
+          {profile && (
+            <div className="-mb-3 flex items-center gap-1 text-sm font-extrabold text-accent">
+              <BackButton fallback="/settings" label="Back to Settings" className="-ml-2" /> Editing your setup
+            </div>
+          )}
           <div className="flex items-center gap-3 lg:hidden">
             <Logo size={36} />
             <div className="flex flex-1 gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={STEPS.length} aria-valuenow={step + 1} aria-label="Setup progress">

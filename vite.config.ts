@@ -3,12 +3,26 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
+import pkg from './package.json' with { type: 'json' }
 
 // GitHub Pages serves the app from /<repo-name>/. Locally it lives at /.
 const base = process.env.BASE_PATH ?? '/'
 
+// Shown in Settings so you can tell which version is installed: "0.5.0 · 2026-09-30 · a1b2c3d".
+function version() {
+  let sha = ''
+  try {
+    sha = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+  } catch {
+    /* not a git checkout */
+  }
+  return [pkg.version, new Date().toISOString().slice(0, 10), sha].filter(Boolean).join(' · ')
+}
+
 export default defineConfig({
   base,
+  define: { __APP_VERSION__: JSON.stringify(version()) },
   plugins: [
     react(),
     tailwindcss(),

@@ -8,7 +8,7 @@ import {
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { ArrowLeft, Flame } from 'lucide-react'
 import { useApp } from '../app/AppContext'
 
@@ -119,11 +119,7 @@ export function PageHeader({
   return (
     <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div className="flex min-w-0 items-start gap-2">
-        {back && (
-          <Link to={back} className="-ml-2 mt-0.5 rounded-xl p-2 text-accent hover:bg-accent-soft sm:mt-1.5" aria-label="Back">
-            <ArrowLeft size={24} />
-          </Link>
-        )}
+        {back && <BackButton fallback={back} className="-ml-2 mt-0.5 sm:mt-1.5" />}
         <div className="min-w-0">
           <h1 className="text-3xl font-black leading-tight sm:text-4xl">{title}</h1>
           {subtitle && <p className="mt-1 font-semibold text-muted">{subtitle}</p>}
@@ -131,6 +127,27 @@ export function PageHeader({
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </header>
+  )
+}
+
+/**
+ * Goes back to the previous page in the app (like the browser's back button, which the
+ * installed app doesn't have). If there is no previous page, goes to `fallback`.
+ */
+export function BackButton({ fallback, className, label = 'Back' }: { fallback: string; className?: string; label?: string }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  // React Router gives the very first page of a visit the key "default".
+  const hasHistory = location.key !== 'default'
+  return (
+    <button
+      type="button"
+      onClick={() => (hasHistory ? navigate(-1) : navigate(fallback))}
+      className={cx('rounded-xl p-2 text-accent hover:bg-accent-soft', className)}
+      aria-label={label}
+    >
+      <ArrowLeft size={24} />
+    </button>
   )
 }
 

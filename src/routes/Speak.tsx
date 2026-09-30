@@ -7,6 +7,7 @@ import { useApp } from '../app/AppContext'
 import { Button, Card, cx, Eyebrow, PageHeader, Segmented, StatPill, TL } from '../components/ui'
 import { SelfTalk } from '../components/session/Stages'
 import { RecordingReview } from '../components/RecordingReview'
+import { ResumeShadowing } from '../components/ResumeShadowing'
 import { db, type RecordingKind, type RecordingRow } from '../db/schema'
 import { playUrl, stopAudio } from '../lib/audio'
 import { formatClock, formatDuration } from '../lib/session'
@@ -54,6 +55,9 @@ export function Speak() {
         <StatPill icon={<History size={22} />} value={conversations.length} label="Calls logged" tone="good" />
       </div>
 
+      <div className="mb-4">
+        <ResumeShadowing />
+      </div>
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <HubLink to="/shadowing" icon={<Waves size={26} />} title="Shadowing" text="Native speakers, A-B loops, record and compare." />
         <HubLink to="/then-and-now" icon={<History size={26} />} title="Then and now" text="Weeks 1, 4, 8 and 12, side by side." />

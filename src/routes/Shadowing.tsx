@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { FileAudio, Trash2, Upload, Volume2, Waves } from 'lucide-react'
 import { useApp } from '../app/AppContext'
@@ -10,12 +11,14 @@ import { shadowClips } from '../lib/audio'
 import { contentWeek } from '../lib/program'
 import { storageErrorMessage } from '../lib/storage'
 import { speak } from '../lib/tts'
+import { setLastShadow } from '../lib/lastShadow'
 
 const MAX_IMPORT_BYTES = 60 * 1024 * 1024
 
 export function Shadowing() {
   const { pack, lang, plan, today } = useApp()
-  const [week, setWeek] = useState(plan ? contentWeek(plan, today) : 1)
+  const [params] = useSearchParams()
+  const [week, setWeek] = useState(() => Number(params.get('week')) || (plan ? contentWeek(plan, today) : 1))
   const [tab, setTab] = useState<'clips' | 'drills'>('clips')
   const imported = useLiveQuery(() => db.clips.where('[lang+week]').equals([lang, week]).toArray(), [lang, week], [])
   const w = pack.weeks[week - 1]
@@ -28,9 +31,14 @@ export function Shadowing() {
     ],
     [pack, week, imported, w],
   )
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string | null>(() => params.get('clip'))
   const playerRef = useRef<HTMLDivElement>(null)
   const current = sources.find((s) => sourceId(s) === selected) ?? sources[0]
+
+  // Remember the clip for the "Resume shadowing" shortcut.
+  useEffect(() => {
+    if (current) setLastShadow(lang, { week, id: sourceId(current), text: current.kind === 'import' ? current.clip.title : sourceText(current) })
+  }, [current, week, lang])
 
   return (
     <div>

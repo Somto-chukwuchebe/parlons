@@ -1,11 +1,12 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { ChevronLeft, ChevronRight, Dices, Volume2 } from 'lucide-react'
 import { useApp } from '../../app/AppContext'
 import type { RecordingRow } from '../../db/schema'
 import { speak } from '../../lib/tts'
 import { shadowClips } from '../../lib/audio'
-import { ShadowPlayer, sourceId, type ShadowSource } from '../ShadowPlayer'
+import { setLastShadow } from '../../lib/lastShadow'
+import { ShadowPlayer, sourceId, sourceText, type ShadowSource } from '../ShadowPlayer'
 import type { PromptSeed, WeekSeed } from '../../packs/types'
 import { Recorder } from '../Recorder'
 import { ConversationForm } from '../ConversationForm'
@@ -96,6 +97,10 @@ export function ShadowingStage({ week, onRep }: { week: WeekSeed; onRep: () => v
   )
   const [i, setI] = useState(0)
   const source = sources[i]
+  const { lang } = useApp()
+  useEffect(() => {
+    setLastShadow(lang, { week: week.week, id: sourceId(source), text: sourceText(source) })
+  }, [source, week.week, lang])
   const drill = pack.drills[(week.week - 1) % pack.drills.length]
   const go = (d: number) => setI((n) => (n + d + sources.length) % sources.length)
 

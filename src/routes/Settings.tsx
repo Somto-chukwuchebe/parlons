@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ArchiveRestore, BellRing, Download, HardDrive, Languages, Palette, ShieldAlert, ShieldCheck, SlidersHorizontal, Smartphone, Upload } from 'lucide-react'
+import { ArchiveRestore, BadgeInfo, BellRing, Download, RefreshCw, Sparkles, HardDrive, Languages, Palette, ShieldAlert, ShieldCheck, SlidersHorizontal, Smartphone, Upload } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { useApp } from '../app/AppContext'
 import { Button, Card, LinkButton, Notice, PageHeader, Segmented, Toggle } from '../components/ui'
 import { updateSettings } from '../db/schema'
 import { BackupError, deliverBackup, deliverFile, exportBackup, parseBackup, restoreBackup, type ParsedBackup } from '../lib/backup'
 import { buildIcs } from '../lib/ics'
+import { allowBadge, badgeSupport, type BadgeSupport } from '../lib/badge'
+import { APP_VERSION, checkForUpdate, installUpdate, usePwa } from '../lib/pwa'
 import { toDayKey } from '../lib/program'
 import { PROGRAM_DAYS } from '../config'
 import { formatBytes, requestPersistence, storageErrorMessage, storageEstimate } from '../lib/storage'
@@ -34,6 +36,9 @@ export function Settings() {
   const [pending, setPending] = useState<ParsedBackup | null>(null)
   const [mode, setMode] = useState<'merge' | 'replace'>('merge')
   const fileRef = useRef<HTMLInputElement>(null)
+  const pwa = usePwa()
+  const [checkResult, setCheckResult] = useState<string | null>(null)
+  const [badge, setBadge] = useState<BadgeSupport>(() => badgeSupport())
 
   useEffect(() => {
     storageEstimate().then(setStorage)
@@ -87,7 +92,7 @@ export function Settings() {
 
   return (
     <div>
-      <PageHeader title="Settings" subtitle="Your data stays on this device." />
+      <PageHeader back="/more" title="Settings" subtitle="Your data stays on this device." />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="space-y-4">
           <CardTitle icon={<Palette size={22} />} title="Appearance" />
@@ -170,6 +175,56 @@ export function Settings() {
             </div>
           )}
           {message && <Notice tone={message.tone}>{message.text}</Notice>}
+        </Card>
+
+        <Card className="space-y-3">
+          <CardTitle icon={<Sparkles size={22} />} title="App version and updates" />
+          <p className="font-semibold">
+            Version <span className="font-black tabular-nums">{APP_VERSION}</span>
+          </p>
+          {pwa.needRefresh ? (
+            <Button variant="primary" icon={<RefreshCw size={18} />} onClick={installUpdate}>
+              Update now
+            </Button>
+          ) : (
+            <Button
+              icon={<RefreshCw size={18} className={pwa.checking ? 'animate-spin' : ''} />}
+              disabled={pwa.checking || !pwa.supported}
+              onClick={async () => {
+                setCheckResult(null)
+                const found = await checkForUpdate()
+                setCheckResult(found ? null : navigator.onLine ? "You're on the latest version." : "You're offline. Connect to the internet to check.")
+              }}
+            >
+              {pwa.checking ? 'Checking…' : 'Check for updates'}
+            </Button>
+          )}
+          {!pwa.supported && <p className="text-sm font-semibold text-muted">Updates are automatic in this browser; reload the page to get the newest version.</p>}
+          {checkResult && <Notice tone="good">{checkResult}</Notice>}
+          <p className="text-xs font-semibold text-muted">
+            Parlons checks for new versions whenever you open it while online. Updating keeps all your data and recordings.
+          </p>
+        </Card>
+
+        <Card className="space-y-3">
+          <CardTitle icon={<BadgeInfo size={22} />} title="Number on the app icon" />
+          <Toggle
+            label="Show phrases for today on the icon"
+            hint="Due reviews plus today's new phrases. It refreshes whenever you open Parlons."
+            checked={!!settings.badge}
+            onChange={async (on) => {
+              if (on) setBadge(await allowBadge())
+              await updateSettings({ badge: on })
+            }}
+          />
+          {settings.badge && badge !== 'yes' && (
+            <Notice tone="warn">
+              {badge === 'needs-permission' && 'Allow notifications for Parlons when asked: Apple only shows icon numbers for apps with that permission. Parlons never sends notifications.'}
+              {badge === 'blocked' && 'Notifications are turned off for Parlons, so the icon number can’t show. On iPhone: Settings → Notifications → Parlons → Allow.'}
+              {badge === 'home-screen-only' && 'This works from the home-screen app, not in Safari. Open Parlons from its icon and turn this on there.'}
+              {badge === 'no' && 'This browser can’t show numbers on app icons. It works on iPhone (home-screen app), and on Chrome or Edge on laptops.'}
+            </Notice>
+          )}
         </Card>
 
         <Card className="space-y-3">

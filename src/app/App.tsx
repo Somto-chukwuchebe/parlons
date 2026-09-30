@@ -1,6 +1,7 @@
 import { createHashRouter, Navigate, RouterProvider, useLocation } from 'react-router'
 import { lazy, Suspense, type ReactNode } from 'react'
 import { AppProvider, useApp } from './AppContext'
+import { UpdatePrompt } from '../components/UpdatePrompt'
 import { Layout } from './Layout'
 import { Today } from '../routes/Today'
 import { Onboarding } from '../routes/Onboarding'
@@ -87,6 +88,7 @@ export function App() {
   return (
     <AppProvider>
       <RouterProvider router={router} />
+      <UpdatePrompt />
     </AppProvider>
   )
 }

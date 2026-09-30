@@ -20,6 +20,8 @@ export interface AppSettings {
   showEnglish: boolean
   lastBackupAt?: number
   storagePersisted?: boolean
+  /** Show phrases-for-today on the app icon. */
+  badge?: boolean
   ai: { directEnabled: boolean; apiKey?: string; model: string }
 }
 

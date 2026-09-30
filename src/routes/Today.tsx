@@ -14,6 +14,7 @@ import { ensureDeck, queueStats, type QueueStats } from '../lib/srs'
 import { formatDuration, isResumable, STAGE_INFO } from '../lib/session'
 import { speakingSeconds } from '../lib/stats'
 import { ROUNDS } from './ThenAndNow'
+import { ResumeShadowing } from '../components/ResumeShadowing'
 
 export function Today() {
   const { pack, plan, today, profile, settings, lang } = useApp()
@@ -205,6 +206,8 @@ export function Today() {
           </ul>
         </Card>
       </div>
+
+      <ResumeShadowing />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatPill icon={<Layers size={22} />} value={stats ? stats.dueReviews + stats.newAvailable : '–'} label="Phrases for today" />

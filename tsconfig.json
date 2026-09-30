@@ -11,6 +11,7 @@
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "noEmit": true,
     "types": ["node", "vite/client", "vite-plugin-pwa/client", "vitest/globals", "@testing-library/jest-dom"]

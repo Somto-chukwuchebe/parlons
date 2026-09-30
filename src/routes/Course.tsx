@@ -57,6 +57,7 @@ export function Course() {
   return (
     <div>
       <PageHeader
+        back="/more"
         title="Your course"
         subtitle={`12 stations to confident conversation in ${pack.name}`}
         actions={

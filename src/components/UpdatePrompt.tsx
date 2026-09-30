@@ -1,31 +1,20 @@
-import { useEffect, useState } from 'react'
+import { RefreshCw } from 'lucide-react'
+import { dismissOfflineReady, installUpdate, usePwa } from '../lib/pwa'
 import { Button } from './ui'
 
-// Shows a banner when a new version of the app has been downloaded in the background.
+// Banner when a new version has downloaded (also available any time in Settings → App version).
 export function UpdatePrompt() {
-  const [update, setUpdate] = useState<null | (() => void)>(null)
-  const [offlineReady, setOfflineReady] = useState(false)
-
-  useEffect(() => {
-    if (import.meta.env.DEV || !('serviceWorker' in navigator)) return
-    import('virtual:pwa-register').then(({ registerSW }) => {
-      const updateSW = registerSW({
-        onNeedRefresh: () => setUpdate(() => () => updateSW(true)),
-        onOfflineReady: () => setOfflineReady(true),
-      })
-    })
-  }, [])
-
-  if (!update && !offlineReady) return null
+  const { needRefresh, offlineReady } = usePwa()
+  if (!needRefresh && !offlineReady) return null
   return (
-    <div role="status" className="fixed inset-x-3 bottom-24 z-20 mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-line bg-surface p-3 shadow-lg">
-      <p className="flex-1 text-sm">
-        {update ? 'A new version is ready.' : 'Ready to work offline.'}
-      </p>
-      {update ? (
-        <Button onClick={update}>Update</Button>
+    <div role="status" className="pop-in fixed inset-x-3 bottom-24 z-40 mx-auto flex max-w-lg items-center gap-3 rounded-2xl border-2 border-accent bg-surface p-3 shadow-lg md:bottom-6">
+      <p className="flex-1 text-sm font-bold">{needRefresh ? 'A new version of Parlons is ready.' : 'Parlons is ready to work offline.'}</p>
+      {needRefresh ? (
+        <Button variant="primary" size="sm" icon={<RefreshCw size={16} />} onClick={installUpdate}>
+          Update now
+        </Button>
       ) : (
-        <Button variant="ghost" onClick={() => setOfflineReady(false)}>
+        <Button variant="ghost" size="sm" onClick={dismissOfflineReady}>
           OK
         </Button>
       )}
