@@ -64,8 +64,16 @@ export async function checkForUpdate(): Promise<boolean> {
 
 /** Switch to the downloaded version and reload. */
 export async function installUpdate() {
-  if (applyUpdate) await applyUpdate(true)
-  else location.reload()
+  // Normal case: a new version is waiting; tell it to take over, and the page reloads when it does.
+  // If nothing is waiting (e.g. this page loaded before offline support was installed, so the new
+  // version activated straight away), a plain reload is all that's needed.
+  if (applyUpdate && registration?.waiting) {
+    await applyUpdate(true)
+    // Safety net in case the "new version is in control" signal never arrives.
+    setTimeout(() => location.reload(), 4000)
+  } else {
+    location.reload()
+  }
 }
 
 export const dismissOfflineReady = () => set({ offlineReady: false })
