@@ -212,11 +212,15 @@ export function backupFileName(date = new Date()) {
 
 /** Save or share a backup. Uses the share sheet where it can share files (iPhone/Android). */
 export async function deliverBackup(bytes: Uint8Array): Promise<'shared' | 'downloaded'> {
-  const name = backupFileName()
-  const file = new File([bytes as BlobPart], name, { type: 'application/zip' })
+  return deliverFile(bytes, backupFileName(), 'application/zip', `${APP_NAME} backup`)
+}
+
+/** Share a file (share sheet on phones) or download it. */
+export async function deliverFile(bytes: Uint8Array | string, name: string, type: string, title: string): Promise<'shared' | 'downloaded'> {
+  const file = new File([bytes as BlobPart], name, { type })
   if (navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: `${APP_NAME} backup` })
+      await navigator.share({ files: [file], title })
       return 'shared'
     } catch (e) {
       if ((e as Error).name === 'AbortError') throw e

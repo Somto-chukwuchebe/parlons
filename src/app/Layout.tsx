@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
-import { Download, House, Layers, Mic, Plus, Settings, TrainFront } from 'lucide-react'
+import { CalendarCheck, ChartLine, Download, House, Layers, Menu, Mic, Plus, Settings, TrainFront, Trophy } from 'lucide-react'
 import { QuickAddDialog } from '../components/QuickAdd'
 import { UpdatePrompt } from '../components/UpdatePrompt'
 import { OfflineBadge } from '../components/OfflineBadge'
@@ -15,13 +15,20 @@ interface Item {
   icon: ReactNode
 }
 
-const items: Item[] = [
+const main: Item[] = [
   { to: '/', label: 'Today', icon: <House size={24} strokeWidth={2.4} /> },
   { to: '/phrases', label: 'Phrases', icon: <Layers size={24} strokeWidth={2.4} /> },
   { to: '/speak', label: 'Speak', icon: <Mic size={24} strokeWidth={2.4} /> },
+  { to: '/progress', label: 'Progress', icon: <ChartLine size={24} strokeWidth={2.4} /> },
+]
+// Sidebar shows everything; on phones these live behind "More".
+const extra: Item[] = [
   { to: '/course', label: 'Course', icon: <TrainFront size={24} strokeWidth={2.4} /> },
+  { to: '/weekly-review', label: 'Weekly review', icon: <CalendarCheck size={24} strokeWidth={2.4} /> },
+  { to: '/fluency-check', label: 'Fluency check', icon: <Trophy size={24} strokeWidth={2.4} /> },
   { to: '/settings', label: 'Settings', icon: <Settings size={24} strokeWidth={2.4} /> },
 ]
+const MORE_PATHS = ['/more', '/course', '/weekly-review', '/fluency-check', '/settings', '/install', '/about']
 
 export function Layout() {
   const { pathname } = useLocation()
@@ -51,7 +58,13 @@ export function Layout() {
           </div>
         </div>
         <ul className="flex flex-col gap-1.5 px-4">
-          {items.map((i) => (
+          {main.map((i) => (
+            <li key={i.to}>
+              <SideLink {...i} />
+            </li>
+          ))}
+          <li className="my-2 border-t-2 border-line" aria-hidden />
+          {extra.map((i) => (
             <li key={i.to}>
               <SideLink {...i} />
             </li>
@@ -94,23 +107,29 @@ export function Layout() {
       {/* Bottom tab bar: phones */}
       <nav aria-label="Main" className="safe-bottom safe-x fixed inset-x-0 bottom-0 z-40 border-t-2 border-line bg-surface/95 backdrop-blur md:hidden">
         <ul className="grid grid-cols-5">
-          {items.map((i) => (
+          {[...main, { to: '/more', label: 'More', icon: <Menu size={24} strokeWidth={2.4} /> }].map((i) => (
             <li key={i.to}>
               <NavLink
                 to={i.to}
                 end={i.to === '/'}
                 className={({ isActive }) =>
-                  cx('flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-extrabold', isActive ? 'text-accent' : 'text-muted')
+                  cx(
+                    'flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-extrabold',
+                    isActive || (i.to === '/more' && MORE_PATHS.some((p) => pathname.startsWith(p))) ? 'text-accent' : 'text-muted',
+                  )
                 }
               >
-                {({ isActive }) => (
+                {({ isActive: active }) => {
+                  const isActive = active || (i.to === '/more' && MORE_PATHS.some((p) => pathname.startsWith(p)))
+                  return (
                   <>
                     <span className={cx('grid h-8 w-12 place-items-center rounded-full transition-colors', isActive && 'bg-accent-soft')}>
                       {i.icon}
                     </span>
                     {i.label}
                   </>
-                )}
+                  )
+                }}
               </NavLink>
             </li>
           ))}

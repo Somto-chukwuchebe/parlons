@@ -1,5 +1,5 @@
 import { createHashRouter, Navigate, RouterProvider, useLocation } from 'react-router'
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { AppProvider, useApp } from './AppContext'
 import { Layout } from './Layout'
 import { Today } from '../routes/Today'
@@ -18,6 +18,12 @@ import { About } from '../routes/About'
 import { Conversations } from '../routes/Conversations'
 import { Mistakes } from '../routes/Mistakes'
 import { RolePlay } from '../routes/RolePlay'
+import { WeeklyReview } from '../routes/WeeklyReview'
+import { FluencyCheck } from '../routes/FluencyCheck'
+import { More } from '../routes/More'
+
+// The dashboard pulls in the charting library; load it only when opened.
+const Progress = lazy(() => import('../routes/Progress'))
 
 // Hash-based URLs (…/#/course) so deep links work on GitHub Pages and offline.
 
@@ -59,6 +65,17 @@ const router = createHashRouter([
       { path: '/conversations', element: <Conversations /> },
       { path: '/mistakes', element: <Mistakes /> },
       { path: '/roleplay', element: <RolePlay /> },
+      {
+        path: '/progress',
+        element: (
+          <Suspense fallback={<p className="py-10 text-center font-bold text-muted">Loading your progress…</p>}>
+            <Progress />
+          </Suspense>
+        ),
+      },
+      { path: '/weekly-review', element: <WeeklyReview /> },
+      { path: '/fluency-check', element: <FluencyCheck /> },
+      { path: '/more', element: <More /> },
       { path: '/course', element: <Course /> },
       { path: '/settings', element: <Settings /> },
     ],

@@ -115,17 +115,37 @@ The native audio comes from [Tatoeba](https://tatoeba.org), used under each spea
 - **AI role-play:** pick a scenario and a correction style (*Flow*: corrections at the end; *Coach*: after every turn). Tap **Copy prompt** (or **Share to an app** on iPhone) and paste it into any AI chat assistant. Have the conversation; type *help* for a hint and *fin* to finish. Copy the AI's final reply, including the ```json block, and paste it back into Parlons. You'll see its mistakes and useful phrases, can edit or untick any of them, then save: mistakes go to your journal as "fix it" cards and phrases go to your bank. If the reply can't be read, fill the same form in by hand.
 - **Self-talk:** a random everyday prompt with a 60-second recording, on the Speak tab and in the session's Conversation stage.
 
-## 8. Reviewing and editing the course
+## 8. Progress, weekly review and the final check
+
+- **Progress tab:**
+  - your streak, and a heatmap of all 90 days;
+  - minutes by stage, with speaking highlighted;
+  - speaking per week, and your weekly self-ratings;
+  - words per minute, calls with people, and longest conversation;
+  - phrases learned and review retention (how often you remember a card when it comes back);
+  - mistakes by type over time, and can-do goals ticked per week.
+  A "Show the weekly numbers as a table" option gives the same data in plain rows.
+- **Weekly review (Sundays; the Today screen reminds you):**
+  - the week's numbers and your top recurring mistakes;
+  - tick the can-do goals you've really reached;
+  - what felt easier or harder, confidence, and an overall rating;
+  - a suggestion for which stage to give more time next week, with the reason;
+  - an optional AI-coach prompt to copy;
+  - a reminder to record your weekly snapshot and to back up.
+- **Final fluency check (week 12):** a recorded 10-minute self-test in five parts: introduce yourself, last weekend, plans, an opinion, a short story. Then play your week 1 recording against today's, and redo the day-one self-assessment to compare levels.
+- **Daily reminder:** Settings → *Add to my calendar* creates a calendar file with a daily study event at your chosen time for all 90 days. On iPhone choose Calendar; it alerts you at the start time. This works without any server.
+
+## 9. Reviewing and editing the course
 
 The whole 12-week French course is in `docs/seed-review-fr.md` (readable on GitHub). In the app, open the **Course** tab: tap **Edit** on any phrase to fix or hide it. Items marked ⚑ are ones worth double-checking.
 
 To change the course for everyone, edit the files in `src/packs/fr/`, then run `npm run seed-doc`.
 
-## 9. Optional AI voice mode
+## 10. Optional AI voice mode
 
-Not built yet (Phase 4). Before it's built, you'll get a plain-language explanation of the privacy, cost and security trade-offs.
+Not built, by choice: the prompt builder (section 7) works with any AI chat app for free, including their voice modes. A direct voice mode would need your own paid Anthropic API key stored on the device, may not be reachable from Russia, and adds privacy and security trade-offs.
 
-## 10. How the 90-day programme is laid out
+## 11. How the 90-day programme is laid out
 
 - The programme runs for 90 days from your start date.
 - Weekly reviews are always on Sunday, so weeks 2–12 run Monday to Sunday.

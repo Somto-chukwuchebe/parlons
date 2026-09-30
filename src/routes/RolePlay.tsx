@@ -75,6 +75,9 @@ export function RolePlay({ embedded = false }: { embedded?: boolean }) {
     categories: pack.mistakeCategories.map((c) => `"${c.id}" (${c.label})`).join(', '),
   })
 
+  // The word that ends the role-play is defined in the pack's template.
+  const finishWord = pack.aiTemplates.rolePlay.match(/ends when I write "([^"]+)"/)?.[1] ?? 'stop'
+
   async function copy() {
     try {
       await navigator.clipboard.writeText(prompt)
@@ -148,8 +151,8 @@ export function RolePlay({ embedded = false }: { embedded?: boolean }) {
               )}
             </div>
             <p className="text-xs font-semibold text-muted">
-              Paste it into any AI chat (Claude, ChatGPT, etc.). Talk by typing or with the app's voice mode. Type "help" for a hint and "fin" to finish and get
-              your report.
+              Paste it into any AI chat (Claude, ChatGPT, etc.). Talk by typing or with the app's voice mode. Type "help" for a hint and "{finishWord}" to finish
+              and get your report.
             </p>
           </Card>
         </section>

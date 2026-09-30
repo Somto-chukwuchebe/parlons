@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ArchiveRestore, Download, HardDrive, Languages, Palette, ShieldAlert, ShieldCheck, SlidersHorizontal, Smartphone, Upload } from 'lucide-react'
+import { ArchiveRestore, BellRing, Download, HardDrive, Languages, Palette, ShieldAlert, ShieldCheck, SlidersHorizontal, Smartphone, Upload } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { useApp } from '../app/AppContext'
 import { Button, Card, LinkButton, Notice, PageHeader, Segmented, Toggle } from '../components/ui'
 import { updateSettings } from '../db/schema'
-import { BackupError, deliverBackup, exportBackup, parseBackup, restoreBackup, type ParsedBackup } from '../lib/backup'
+import { BackupError, deliverBackup, deliverFile, exportBackup, parseBackup, restoreBackup, type ParsedBackup } from '../lib/backup'
+import { buildIcs } from '../lib/ics'
+import { toDayKey } from '../lib/program'
+import { PROGRAM_DAYS } from '../config'
 import { formatBytes, requestPersistence, storageErrorMessage, storageEstimate } from '../lib/storage'
 import { APP_NAME } from '../config'
 
@@ -24,7 +27,7 @@ const TABLE_LABELS: Record<string, string> = {
 }
 
 export function Settings() {
-  const { settings, pack } = useApp()
+  const { settings, pack, profile } = useApp()
   const [storage, setStorage] = useState<{ usage: number; quota: number } | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ tone: 'info' | 'danger'; text: string } | null>(null)
@@ -167,6 +170,40 @@ export function Settings() {
             </div>
           )}
           {message && <Notice tone={message.tone}>{message.text}</Notice>}
+        </Card>
+
+        <Card className="space-y-3">
+          <CardTitle icon={<BellRing size={22} />} title="Daily reminder" />
+          <p className="font-semibold text-muted">
+            Adds a daily {profile?.dailyMinutes ?? 30}-minute study event at <strong>{profile?.studyTime ?? '07:30'}</strong> to your phone's calendar for all{' '}
+            {PROGRAM_DAYS} days, with an alert. Works reliably on iPhone, no notifications permission needed.
+          </p>
+          <Button
+            icon={<BellRing size={18} />}
+            disabled={!profile}
+            onClick={async () => {
+              if (!profile) return
+              const ics = buildIcs({
+                appName: APP_NAME,
+                startDate: profile.startDate > toDayKey(new Date()) ? profile.startDate : toDayKey(new Date()),
+                days: PROGRAM_DAYS,
+                time: profile.studyTime,
+                minutes: profile.dailyMinutes,
+                url: `${location.origin}${import.meta.env.BASE_URL}`,
+              })
+              try {
+                await deliverFile(ics, `${APP_NAME.toLowerCase()}-reminder.ics`, 'text/calendar', `${APP_NAME} reminder`)
+              } catch {
+                /* share cancelled */
+              }
+            }}
+          >
+            Add to my calendar
+          </Button>
+          <p className="text-xs font-semibold text-muted">
+            On iPhone: choose the Calendar app (or save to Files, then tap the file). To change the time, update it in "Start date, daily time and voice", then add
+            it again and delete the old event.
+          </p>
         </Card>
 
         <Card className="space-y-3">

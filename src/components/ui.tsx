@@ -345,7 +345,7 @@ export function StatPill({ icon, value, label, tone = 'accent' }: { icon: ReactN
       </span>
       <div className="min-w-0">
         <p className="text-xl font-black leading-none">{value}</p>
-        <p className="mt-1 truncate text-xs font-bold text-muted">{label}</p>
+        <p className="mt-1 line-clamp-2 text-xs leading-tight font-bold text-muted">{label}</p>
       </div>
     </div>
   )

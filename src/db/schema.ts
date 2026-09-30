@@ -36,6 +36,10 @@ export interface Profile {
   startingLevel: 'A0' | 'A1' | 'A2' | 'B1'
   seedApprovedAt?: number
   onboardedAt: number
+  /** Final fluency check (week 12): self-assessment then. */
+  finalCanDo?: string[]
+  finalLevel?: 'A0' | 'A1' | 'A2' | 'B1'
+  finalCheckAt?: number
 }
 
 export type CardKind = 'phrase' | 'cloze' | 'error'

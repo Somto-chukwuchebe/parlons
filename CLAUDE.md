@@ -68,8 +68,13 @@ features beyond it without asking; suggest them at the end of a phase.
   AI role-play prompt builder + paste-back with Zod validation and a review step (`lib/aiReport.ts`,
   `lib/template.ts`, `routes/RolePlay.tsx`; templates in `src/packs/fr/ai/*.md`). Session Conversation stage offers
   call / AI role-play / self-talk.
-- Pending: direct AI voice mode (16b). Owner must first read the privacy/cost/security explanation and say yes.
-- Next: Phase 5 — progress dashboard, weekly review, final fluency check, .ics reminders.
+- Direct AI voice mode (16b): owner declined after the privacy/cost/security explanation. Don't build it unless asked.
+- Phase 5 done: dashboard (`routes/Progress.tsx`, lazy-loaded with Recharts; numbers in `lib/progress.ts`),
+  Sunday weekly review with can-do ticks and rule-based stage suggestion (`routes/WeeklyReview.tsx`, `lib/weekly.ts`),
+  final fluency check with before/after self-assessment (`routes/FluencyCheck.tsx`), calendar reminder (`lib/ics.ts`).
+  Phone nav: Today, Phrases, Speak, Progress, More (`routes/More.tsx`); sidebar shows everything.
+- Chart colours: `--chart-1/2` and `--heat-0..4` in `index.css`, validated with the dataviz palette checker
+  (light and dark). Single-series charts where possible; a table view exists for the weekly numbers.
 
 ## Agreed decisions (from chat with the owner)
 - Logo: option D4 (navy tile, red stem, white speech-bubble "p"). Palette as in `src/index.css`.

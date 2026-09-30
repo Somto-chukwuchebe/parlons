@@ -13,6 +13,7 @@ import { currentStreak, totalsByDay } from '../lib/streak'
 import { ensureDeck, queueStats, type QueueStats } from '../lib/srs'
 import { formatDuration, isResumable, STAGE_INFO } from '../lib/session'
 import { speakingSeconds } from '../lib/stats'
+import { ROUNDS } from './ThenAndNow'
 
 export function Today() {
   const { pack, plan, today, profile, settings, lang } = useApp()
@@ -43,6 +44,8 @@ export function Today() {
   const target = profile.dailyMinutes
   const daysStudied = [...totals.values()].filter((s) => s >= 600).length
   const ticked = new Set(canDo.filter((c) => c.week === weekNo).map((c) => c.index))
+  const benchmarkRound = ROUNDS.includes(weekNo as (typeof ROUNDS)[number]) ? weekNo : null
+  const thenAndNowDue = benchmarkRound !== null && phase.kind === 'week' && !recordings.some((r) => r.kind === 'benchmark' && (r.round ?? 1) === benchmarkRound)
   const resumable = sessions
     .filter((s) => isResumable(s, today))
     .sort((a, b) => b.startedAt - a.startedAt)[0]
@@ -174,7 +177,12 @@ export function Today() {
           <div className="my-5">
             <MetroLineCompact total={CURRICULUM_WEEKS} current={phase.kind === 'before' ? 0.5 : weekNo} />
           </div>
-          <Eyebrow className="mb-2">Goals to earn this week</Eyebrow>
+          <div className="mb-2 flex items-center justify-between">
+            <Eyebrow>Goals to earn this week</Eyebrow>
+            <Link to="/weekly-review" className="text-xs font-extrabold text-accent">
+              Tick goals
+            </Link>
+          </div>
           <ul className="space-y-2">
             {week.canDo.map((c, i) => {
               const done = ticked.has(i)
@@ -205,7 +213,30 @@ export function Today() {
         <StatPill icon={<Award size={22} />} value={canDo.length} label="Goals earned" tone="gold" />
       </div>
 
-      {isReviewDay(plan, today) && <Notice icon={<CalendarCheck size={20} />}>Your weekly review is due today.</Notice>}
+      {isReviewDay(plan, today) && (
+        <Notice icon={<CalendarCheck size={20} />}>
+          Sunday: your weekly review is due.{' '}
+          <Link to="/weekly-review" className="underline decoration-2 underline-offset-2">
+            Do it now (5 minutes)
+          </Link>
+        </Notice>
+      )}
+      {thenAndNowDue && (
+        <Notice icon={<History size={20} />}>
+          This is a "Then and now" week: record the three benchmark prompts so you can hear your progress later.{' '}
+          <Link to="/then-and-now" className="underline decoration-2 underline-offset-2">
+            Record them
+          </Link>
+        </Notice>
+      )}
+      {(phase.kind === 'final' || (phase.kind === 'week' && phase.week === 12)) && !profile.finalCheckAt && (
+        <Notice tone="good" icon={<Award size={20} />}>
+          Final stretch: time for your 10-minute fluency check.{' '}
+          <Link to="/fluency-check" className="underline decoration-2 underline-offset-2">
+            Start it
+          </Link>
+        </Notice>
+      )}
 
       {backupDue && (
         <Notice tone="warn" icon={<ShieldAlert size={20} />}>
