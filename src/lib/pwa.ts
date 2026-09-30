@@ -32,6 +32,9 @@ export function startPwa() {
   set({ supported: true })
   void import('virtual:pwa-register').then(({ registerSW }) => {
     applyUpdate = registerSW({
+      // Register now: by the time this runs, the page's "load" event has usually already
+      // fired, and waiting for it (the default) would mean never registering at all.
+      immediate: true,
       onNeedRefresh: () => set({ needRefresh: true }),
       onOfflineReady: () => set({ offlineReady: true }),
       onRegisteredSW: (_url, r) => {
