@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
+  ArrowLeft,
   BookOpen,
   Check,
   Clock,
@@ -32,8 +33,11 @@ import {
   current,
   extend,
   finishEarly,
+  canGoTo,
   formatClock,
   formatDuration,
+  goTo,
+  upcomingIndex,
   isFinished,
   isOvertime,
   isResumable,
@@ -129,7 +133,7 @@ function SessionPlayer({ mode, resume }: { mode: SessionMode; resume?: Resume })
   const ids = useRef({ id: resume?.id ?? newId(), startedAt: resume?.startedAt ?? Date.now(), day: resume?.day ?? today })
   // Reviews done before resuming; the deck reports counts for this visit only.
   const reviewBase = useRef(resume?.activity.review ?? { reviewed: 0, again: 0 })
-  const chimed = useRef<number>(-1)
+  const chimed = useRef(new Set<number>())
   const finished = isFinished(session)
   useWakeLock(!finished && !paused)
 
@@ -154,8 +158,8 @@ function SessionPlayer({ mode, resume }: { mode: SessionMode; resume?: Resume })
   // Gentle chime once when a stage's time is up.
   const st = current(session)
   useEffect(() => {
-    if (st && isOvertime(st) && chimed.current !== session.index) {
-      chimed.current = session.index
+    if (st && isOvertime(st) && !chimed.current.has(session.index)) {
+      chimed.current.add(session.index)
       chime()
     }
   }, [st, session.index])
@@ -203,6 +207,11 @@ function SessionPlayer({ mode, resume }: { mode: SessionMode; resume?: Resume })
     }
   }, [save])
 
+  // Each visit to the Review stage counts on top of the reviews already done this session.
+  useEffect(() => {
+    if (current(session)?.stage === 'review') reviewBase.current = latest.current.activity.review
+  }, [session.index])
+
   const act = (fn: (s: SessionState) => SessionState) => {
     unlockAudio()
     setSession(fn)
@@ -214,7 +223,10 @@ function SessionPlayer({ mode, resume }: { mode: SessionMode; resume?: Resume })
   const idx = session.index
   const info = STAGE_INFO[st!.stage]
   const over = isOvertime(st!)
-  const isLast = idx === session.stages.length - 1
+  const upcoming = upcomingIndex(session)
+  const isLast = upcoming >= session.stages.length
+  // The nearest earlier stage you can go back to (for the "Back to …" link).
+  const backTarget = [...session.stages.keys()].filter((j) => j < idx && canGoTo(session, j)).pop()
 
   return (
     <div className="safe-top safe-x min-h-dvh">
@@ -225,17 +237,29 @@ function SessionPlayer({ mode, resume }: { mode: SessionMode; resume?: Resume })
           <ol className="flex flex-1 gap-1.5" aria-label="Stages">
             {session.stages.map((s, j) => {
               const Icon = STAGE_ICONS[s.stage]
+              const canGo = canGoTo(session, j)
               return (
-                <li
-                  key={s.stage}
-                  className={cx(
-                    'flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl text-xs font-extrabold',
-                    j === idx ? 'bg-accent text-on-accent' : s.status === 'done' ? 'bg-good-soft text-good' : s.status === 'skipped' ? 'bg-sunk text-muted line-through' : 'bg-sunk text-muted',
-                  )}
-                  aria-current={j === idx ? 'step' : undefined}
-                >
-                  {s.status === 'done' ? <Check size={16} strokeWidth={3} /> : <Icon size={16} strokeWidth={2.5} />}
-                  <span className="hidden sm:inline">{STAGE_INFO[s.stage].title}</span>
+                <li key={s.stage} className="flex-1">
+                  <button
+                    type="button"
+                    disabled={!canGo}
+                    onClick={() => act((x) => goTo(x, j))}
+                    className={cx(
+                      'flex h-10 w-full items-center justify-center gap-1.5 rounded-xl text-xs font-extrabold transition-colors disabled:cursor-default',
+                      j === idx
+                        ? 'bg-accent text-on-accent'
+                        : s.status === 'done'
+                          ? 'bg-good-soft text-good hover:brightness-95'
+                          : s.status === 'skipped'
+                            ? 'bg-sunk text-muted line-through hover:text-ink'
+                            : 'bg-sunk text-muted',
+                    )}
+                    aria-current={j === idx ? 'step' : undefined}
+                    aria-label={`${STAGE_INFO[s.stage].title}${s.status === 'done' ? ', done' : s.status === 'skipped' ? ', skipped' : ''}${canGo ? '. Go back to this stage' : ''}`}
+                  >
+                    {s.status === 'done' ? <Check size={16} strokeWidth={3} /> : <Icon size={16} strokeWidth={2.5} />}
+                    <span className="hidden sm:inline">{STAGE_INFO[s.stage].title}</span>
+                  </button>
                 </li>
               )
             })}
@@ -263,6 +287,15 @@ function SessionPlayer({ mode, resume }: { mode: SessionMode; resume?: Resume })
             </Eyebrow>
             <h1 className="text-3xl font-black leading-tight">{info.title}</h1>
             <p className="font-semibold text-muted">{over ? "Time's up. Finish what you're doing, then move on." : info.blurb}</p>
+            {backTarget !== undefined && (
+              <button
+                type="button"
+                onClick={() => act((x) => goTo(x, backTarget))}
+                className="mt-1 inline-flex items-center gap-1 text-sm font-extrabold text-accent underline-offset-2 hover:underline"
+              >
+                <ArrowLeft size={16} /> Back to {STAGE_INFO[session.stages[backTarget].stage].title}
+              </button>
+            )}
           </div>
         </header>
 
@@ -299,7 +332,7 @@ function SessionPlayer({ mode, resume }: { mode: SessionMode; resume?: Resume })
             2 min
           </Button>
           <Button variant={isLast ? 'good' : 'primary'} className="min-w-0 flex-1 px-3" onClick={() => act(next)}>
-            {isLast ? 'Finish' : 'Next stage'}
+            {isLast ? 'Finish' : upcoming === idx + 1 ? 'Next stage' : `Next: ${STAGE_INFO[session.stages[upcoming].stage].title}`}
           </Button>
         </div>
       </div>

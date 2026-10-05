@@ -49,6 +49,8 @@ export interface StageState {
   plannedSec: number
   elapsedSec: number
   status: 'pending' | 'active' | 'done' | 'skipped'
+  /** Set while revisiting a finished stage: its status before you went back to it. */
+  wasStatus?: 'done' | 'skipped'
 }
 
 export interface SessionState {
@@ -79,12 +81,46 @@ function update(s: SessionState, i: number, patch: Partial<StageState>): StageSt
   return s.stages.map((st, j) => (j === i ? { ...st, ...patch } : st))
 }
 
+/** The stage to go to next: the first unfinished one after `from`, else any unfinished one. */
+function nextUnfinished(stages: StageState[], from: number): number {
+  const after = stages.findIndex((st, j) => j > from && st.status === 'pending')
+  if (after !== -1) return after
+  const any = stages.findIndex((st) => st.status === 'pending')
+  return any === -1 ? stages.length : any
+}
+
 function advance(s: SessionState, status: 'done' | 'skipped'): SessionState {
   if (isFinished(s)) return s
-  let stages = update(s, s.index, { status })
-  const index = s.index + 1
+  const cur = s.stages[s.index]
+  // Skipping a stage you went back to leaves it as it was; finishing it marks it done.
+  const finalStatus = status === 'skipped' && cur.wasStatus ? cur.wasStatus : status
+  let stages = update(s, s.index, { status: finalStatus, wasStatus: undefined })
+  const index = nextUnfinished(stages, s.index)
   if (index < stages.length) stages = stages.map((st, j) => (j === index ? { ...st, status: 'active' } : st))
   return { ...s, stages, index }
+}
+
+/** Where "Next stage" will go (stages.length = the session ends). */
+export const upcomingIndex = (s: SessionState) => nextUnfinished(s.stages.map((st, j) => (j === s.index ? { ...st, status: 'done' as const } : st)), s.index)
+
+/** Stages you can jump back to: any you've already finished or skipped. */
+export const canGoTo = (s: SessionState, target: number) =>
+  !isFinished(s) && target !== s.index && (s.stages[target]?.status === 'done' || s.stages[target]?.status === 'skipped')
+
+/**
+ * Go back to an earlier (finished or skipped) stage. Time then counts towards that stage.
+ * The stage you leave keeps its time: if you hadn't finished it, it's waiting for you,
+ * and "Next stage" from the revisited stage brings you back to it.
+ */
+export function goTo(s: SessionState, target: number): SessionState {
+  if (!canGoTo(s, target)) return s
+  const cur = s.stages[s.index]
+  const stages = s.stages.map((st, j) => {
+    if (j === s.index) return { ...st, status: cur.wasStatus ?? ('pending' as const), wasStatus: undefined }
+    if (j === target) return { ...st, status: 'active' as const, wasStatus: st.status as 'done' | 'skipped' }
+    return st
+  })
+  return { ...s, stages, index: target }
 }
 
 /** Add real elapsed seconds to the current stage. */
@@ -111,7 +147,7 @@ export function extend(s: SessionState, seconds = EXTEND_SEC): SessionState {
 export function finishEarly(s: SessionState): SessionState {
   if (isFinished(s)) return s
   const stages = s.stages.map((st, j) =>
-    j === s.index ? { ...st, status: 'done' as const } : j > s.index ? { ...st, status: 'skipped' as const } : st,
+    j === s.index ? { ...st, status: 'done' as const, wasStatus: undefined } : st.status === 'pending' ? { ...st, status: 'skipped' as const } : st,
   )
   return { ...s, stages, index: stages.length }
 }
@@ -129,7 +165,10 @@ export function restoreSession(mode: SessionMode, logs: StageLog[], index: numbe
         ...st,
         plannedSec: log?.plannedSec ?? st.plannedSec,
         elapsedSec: log?.actualSec ?? 0,
-        status: j < i ? (log?.skipped ? 'skipped' : 'done') : j === i ? 'active' : 'pending',
+        // Newer saves record each stage's status; older ones are inferred from position.
+        status: j === i ? 'active' : log?.status && log.status !== 'active' ? log.status : j < i ? (log?.skipped ? 'skipped' : 'done') : 'pending',
+        // Resuming while revisiting a finished stage: remember it was finished.
+        wasStatus: j === i && (log?.status === 'done' || log?.status === 'skipped') ? log.status : undefined,
       }
     }),
   }
@@ -148,6 +187,7 @@ export function toStageLogs(s: SessionState): StageLog[] {
     plannedSec: st.plannedSec,
     actualSec: Math.round(st.elapsedSec),
     skipped: st.status === 'skipped' || (st.status === 'pending' && st.elapsedSec === 0),
+    status: st.status === 'active' && st.wasStatus ? st.wasStatus : st.status,
   }))
 }
 

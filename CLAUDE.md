@@ -76,6 +76,8 @@ features beyond it without asking; suggest them at the end of a phase.
   Sunday weekly review with can-do ticks and rule-based stage suggestion (`routes/WeeklyReview.tsx`, `lib/weekly.ts`),
   final fluency check with before/after self-assessment (`routes/FluencyCheck.tsx`), calendar reminder (`lib/ics.ts`).
   Phone nav: Today, Phrases, Speak, Progress, More (`routes/More.tsx`); sidebar shows everything.
+- Sessions: learner can go back to finished/skipped stages (`goTo`/`canGoTo` in `lib/session.ts`); Next goes to
+  the next unfinished stage (`upcomingIndex`); stage logs save `status` so resume knows what was finished.
 - Extras after Phase 5: app-icon badge (`lib/badge.ts`, opt-in in Settings; iOS needs notification permission),
   resume-shadowing shortcut (`lib/lastShadow.ts`, localStorage), history-aware `BackButton` in `PageHeader`
   (falls back to the given path), update checks on foreground + hourly and a Settings "Check for updates" (`lib/pwa.ts`),

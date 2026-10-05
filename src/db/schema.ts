@@ -85,6 +85,8 @@ export interface StageLog {
   plannedSec: number
   actualSec: number
   skipped: boolean
+  /** Saved so a resumed session knows which stages were finished (you can go back to stages). */
+  status?: 'pending' | 'active' | 'done' | 'skipped'
 }
 
 export interface SessionRow {

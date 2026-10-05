@@ -91,7 +91,7 @@ On **Today**, pick 10, 30, 45 or 60 minutes and tap **Start session**. The app w
 - **Speak:** answer prompts out loud; tap the red button to record, then listen back.
 - **Conversation** (45 and 60 min): log a real call, or do a 60-second self-talk.
 
-Skip or add 2 minutes to any stage; a soft chime tells you when a stage's time is up. At the end you'll see exactly what you did. Any day with 10+ minutes keeps your streak.
+Skip or add 2 minutes to any stage; a soft chime tells you when a stage's time is up. To go back to an earlier stage, tap it in the row of stages at the top (or "← Back to …" under the stage title). Time counts towards whichever stage you're on, and **Next** returns you to where you left off. At the end you'll see exactly what you did. Any day with 10+ minutes keeps your streak.
 
 The **10-minute** option is review plus speaking, for busy days.
 

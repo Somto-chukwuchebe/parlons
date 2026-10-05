@@ -1,4 +1,7 @@
 import {
+  upcomingIndex,
+  canGoTo,
+  goTo,
   createSession,
   isResumable,
   restoreSession,
@@ -62,7 +65,7 @@ describe('session timing', () => {
     s = skip(s)
     expect(current(s)!.stage).toBe('structure')
     const logs = toStageLogs(s)
-    expect(logs[0]).toEqual({ stage: 'review', plannedSec: 300, actualSec: 90, skipped: true })
+    expect(logs[0]).toMatchObject({ stage: 'review', plannedSec: 300, actualSec: 90, skipped: true, status: 'skipped' })
   })
 
   it('logs actual minutes per stage through a full session with skip and extend', () => {
@@ -121,5 +124,59 @@ describe('session timing', () => {
     expect(isResumable(row, '2026-10-02')).toBe(false)
     expect(isResumable({ ...row, completed: true }, '2026-10-01')).toBe(false)
     expect(isResumable({ ...row, stages: toStageLogs(tick(createSession(30), 5)) }, '2026-10-01')).toBe(false)
+  })
+
+  it('goes back to an earlier stage, logs time there, and Next returns to where you were', () => {
+    let s = createSession(30) // review, structure, shadowing, speak
+    s = next(tick(s, 300)) // review done
+    s = next(tick(s, 600)) // structure done
+    s = tick(s, 120) // 2 min into shadowing
+    expect(canGoTo(s, 0)).toBe(true)
+    expect(canGoTo(s, 3)).toBe(false) // can't jump forward to an unstarted stage
+    s = goTo(s, 1) // back to structure
+    expect(upcomingIndex(s)).toBe(2) // Next will return to shadowing
+    expect(current(s)!.stage).toBe('structure')
+    expect(s.stages[2].status).toBe('pending') // shadowing waits, keeping its 2 minutes
+    s = tick(s, 60)
+    s = next(s) // structure done again → back to shadowing, not to review
+    expect(current(s)!.stage).toBe('shadowing')
+    expect(current(s)!.elapsedSec).toBe(120)
+    expect(toStageLogs(s).map((l) => l.actualSec)).toEqual([300, 660, 120, 0])
+  })
+
+  it('a skipped stage can be revisited; finishing it marks it done, skipping again keeps it skipped', () => {
+    let s = createSession(10) // review, speak
+    s = skip(s) // skip review untouched
+    s = tick(s, 30)
+    s = goTo(s, 0)
+    s = skip(tick(s, 10)) // leave review again without finishing
+    expect(s.stages[0].status).toBe('skipped')
+    expect(current(s)!.stage).toBe('speak')
+    s = goTo(s, 0)
+    s = next(tick(s, 50))
+    expect(s.stages[0].status).toBe('done')
+    expect(current(s)!.stage).toBe('speak')
+  })
+
+  it('finishing early after going back skips only unstarted stages', () => {
+    let s = createSession(30)
+    s = next(tick(s, 300))
+    s = tick(s, 100) // structure in progress
+    s = goTo(s, 0)
+    s = finishEarly(s)
+    expect(isFinished(s)).toBe(true)
+    expect(s.stages.map((x) => x.status)).toEqual(['done', 'skipped', 'skipped', 'skipped'])
+    expect(totalSec(s)).toBe(400)
+  })
+
+  it('resumes with the right statuses after going back', () => {
+    let s = createSession(30)
+    s = next(tick(s, 300))
+    s = next(tick(s, 300))
+    s = tick(s, 60)
+    s = goTo(s, 0) // revisiting review; shadowing pending
+    const restored = restoreSession(30, toStageLogs(s), s.index)
+    expect(restored.stages.map((x) => x.status)).toEqual(['active', 'done', 'pending', 'pending'])
+    expect(current(next(restored))!.stage).toBe('shadowing')
   })
 })
